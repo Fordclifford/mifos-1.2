@@ -51,18 +51,18 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
     private final CommandSourceRepository commandSourceRepository;
     private final FromJsonHelper fromApiJsonHelper;
     private final CommandProcessingService processAndLogCommandService;
-    private final SchedulerJobRunnerReadService schedulerJobRunnerReadService;
+    //private final SchedulerJobRunnerReadService schedulerJobRunnerReadService;
     private final static Logger logger = LoggerFactory.getLogger(PortfolioCommandSourceWritePlatformServiceImpl.class);
 
     @Autowired
     public PortfolioCommandSourceWritePlatformServiceImpl(final PlatformSecurityContext context,
             final CommandSourceRepository commandSourceRepository, final FromJsonHelper fromApiJsonHelper,
-            final CommandProcessingService processAndLogCommandService, final SchedulerJobRunnerReadService schedulerJobRunnerReadService) {
+            final CommandProcessingService processAndLogCommandService /* , final SchedulerJobRunnerReadService schedulerJobRunnerReadService */) {
         this.context = context;
         this.commandSourceRepository = commandSourceRepository;
         this.fromApiJsonHelper = fromApiJsonHelper;
         this.processAndLogCommandService = processAndLogCommandService;
-        this.schedulerJobRunnerReadService = schedulerJobRunnerReadService;
+       // this.schedulerJobRunnerReadService = schedulerJobRunnerReadService;
     }
 
     @Override
@@ -176,7 +176,8 @@ public class PortfolioCommandSourceWritePlatformServiceImpl implements Portfolio
     }
 
     private boolean validateIsUpdateAllowed() {
-        return this.schedulerJobRunnerReadService.isUpdatesAllowed();
+        //return this.schedulerJobRunnerReadService.isUpdatesAllowed();
+    	return true;
 
     }
 
