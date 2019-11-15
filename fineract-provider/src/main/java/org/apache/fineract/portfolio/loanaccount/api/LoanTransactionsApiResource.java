@@ -26,12 +26,17 @@ import org.apache.fineract.commands.service.CommandWrapperBuilder;
 import org.apache.fineract.commands.service.PortfolioCommandSourceWritePlatformService;
 import org.apache.fineract.infrastructure.core.api.ApiRequestParameterHelper;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenantConnection;
 import org.apache.fineract.infrastructure.core.exception.UnrecognizedQueryParamException;
 import org.apache.fineract.infrastructure.core.serialization.ApiRequestJsonSerializationSettings;
 import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSerializer;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
+import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
+import org.apache.fineract.portfolio.loanaccount.exception.ReceiptNullException;
+import org.apache.fineract.portfolio.loanaccount.exception.ReceiptNumberExistException;
 import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.paymenttype.service.PaymentTypeReadPlatformService;
@@ -39,6 +44,10 @@ import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
+
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
@@ -176,6 +185,41 @@ public class LoanTransactionsApiResource {
 
         CommandProcessingResult result = null;
         if (is(commandParam, "repayment")) {
+        
+   			 final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+   			 final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+   			
+   			
+   		      //  final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+   			BuildOptions a = new BuildOptions();
+   			JsonParser ps = new JsonParser();
+   			JsonElement js = ps.parse(apiRequestBodyAsJson);
+   			JsonObject jsonObject = js.getAsJsonObject();
+
+   			JsonElement pay = jsonObject.get("paymentTypeId");
+   			if ("".equals(pay.getAsString().replaceAll("\\W", ""))) {
+   				throw new ReceiptNullException();
+   			}
+   			if (pay.getAsInt() == 4) {
+   				JsonElement r = jsonObject.get("receiptNumber");
+   				if ("".equals(r.getAsString().replaceAll("\\W", ""))) {
+   					throw new ReceiptNullException();
+   				}
+   				JsonParser p = new JsonParser();
+   				JsonElement j = p.parse(a.checkReceipt(r.toString(), tenantConnection.getSchemaName()));
+   				JsonObject job = j.getAsJsonObject();
+   				JsonElement resp = job.get("message");
+   				if (!resp.getAsBoolean()) {
+   					throw new ReceiptNumberExistException(r.toString());
+   				}
+   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
+             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+   			} else {
+   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
+             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+   			}
+   		
+        	
             final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         } else if (is(commandParam, "waiveinterest")) {

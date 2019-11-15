@@ -204,6 +204,7 @@ public class LoanScheduleAssembler {
         final AmortizationMethod amortizationMethod = AmortizationMethod.fromInt(amortizationType);
         
         boolean isEqualAmortization = false;
+        boolean isSecure = false;
         if (this.fromApiJsonHelper.parameterExists(LoanApiConstants.isEqualAmortizationParam, element)) {
             isEqualAmortization = this.fromApiJsonHelper.extractBooleanNamed(LoanApiConstants.isEqualAmortizationParam, element);
         }
@@ -450,7 +451,7 @@ public class LoanScheduleAssembler {
                 recalculationFrequencyType, restCalendarInstance, compoundingMethod, compoundingCalendarInstance, compoundingFrequencyType,
                 principalThresholdForLastInstalment, installmentAmountInMultiplesOf, loanProduct.preCloseInterestCalculationStrategy(),
                 calendar, BigDecimal.ZERO, loanTermVariations, isInterestChargedFromDateSameAsDisbursalDateEnabled,numberOfDays, isSkipMeetingOnFirstDay, detailDTO,
-                allowCompoundingOnEod, isEqualAmortization);
+                allowCompoundingOnEod, isEqualAmortization,isSecure);
 }
 
     private CalendarInstance createCalendarForSameAsRepayment(final Integer repaymentEvery,

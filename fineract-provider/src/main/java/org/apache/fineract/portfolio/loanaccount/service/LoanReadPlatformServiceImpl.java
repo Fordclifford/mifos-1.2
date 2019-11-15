@@ -801,6 +801,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final int interestTypeInt = JdbcSupport.getInteger(rs, "interestType");
             final int interestCalculationPeriodTypeInt = JdbcSupport.getInteger(rs, "interestCalculationPeriodType");
             final boolean isEqualAmortization = rs.getBoolean("isEqualAmortization");
+            final boolean isSecure = rs.getBoolean("isSecure");
             final EnumOptionData amortizationType = LoanEnumerations.amortizationType(amortizationTypeInt);
             final EnumOptionData interestType = LoanEnumerations.interestType(interestTypeInt);
             final EnumOptionData interestCalculationPeriodType = LoanEnumerations
@@ -975,7 +976,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     loanProductCounter, multiDisburseLoan, canDefineInstallmentAmount, fixedEmiAmount, outstandingLoanBalance, inArrears,
                     graceOnArrearsAgeing, isNPA, daysInMonthType, daysInYearType, isInterestRecalculationEnabled,
                     interestRecalculationData, createStandingInstructionAtDisbursement, isvariableInstallmentsAllowed, minimumGap,
-                    maximumGap, loanSubStatus, canUseForTopup, isTopup, closureLoanId, closureLoanAccountNo, topupAmount, isEqualAmortization);
+                    maximumGap, loanSubStatus, canUseForTopup, isTopup, closureLoanId, closureLoanAccountNo, topupAmount, isEqualAmortization,isSecure);
         }
     }
 

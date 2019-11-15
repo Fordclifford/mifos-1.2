@@ -388,6 +388,9 @@ public class Loan extends AbstractPersistableCustom<Long> {
 
     @Column(name = "is_topup", nullable = false)
     private boolean isTopup = false;
+    
+    @Column(name = "is_secure", nullable = false)
+    private boolean isSecure = false;
 
     @OneToOne(cascade = CascadeType.ALL, mappedBy = "loan", optional = true, orphanRemoval = true, fetch=FetchType.EAGER)
     private LoanTopupDetails loanTopupDetails;

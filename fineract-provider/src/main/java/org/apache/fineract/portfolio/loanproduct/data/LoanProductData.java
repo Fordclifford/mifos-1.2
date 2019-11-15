@@ -184,6 +184,7 @@ public class LoanProductData {
     private LoanProductConfigurableAttributes allowAttributeOverrides;
     private final boolean syncExpectedWithDisbursementDate;
     private final boolean isEqualAmortization;
+    private final boolean isSecure;
 
     /**
      * Used when returning lookup information about loan product for dropdowns.
@@ -260,6 +261,7 @@ public class LoanProductData {
         final boolean syncExpectedWithDisbursementDate = false;
         final boolean canUseForTopup = false;
         final boolean isEqualAmortization = false;
+        final boolean isSecure = false;
         return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                 numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
                 minInterestRatePerPeriod, maxInterestRatePerPeriod, annualInterestRate, repaymentFrequencyType, interestRateFrequencyType,
@@ -274,7 +276,7 @@ public class LoanProductData {
                 loanProductConfigurableAttributes, isLinkedToFloatingInterestRates, floatingRateId, floatingRateName,
                 interestRateDifferential, minDifferentialLendingRate, defaultDifferentialLendingRate, maxDifferentialLendingRate,
                 isFloatingInterestRateCalculationAllowed, isVariableInstallmentsAllowed, minimumGap, maximumGap,
-                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization);
+                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization,isSecure);
 
     }
 
@@ -352,6 +354,8 @@ public class LoanProductData {
         final boolean syncExpectedWithDisbursementDate = false;
         final boolean canUseForTopup = false;
         final boolean isEqualAmortization = false;
+        final boolean isSecure = false;
+
 
         return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                 numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
@@ -367,7 +371,7 @@ public class LoanProductData {
                 loanProductConfigurableAttributes, isLinkedToFloatingInterestRates, floatingRateId, floatingRateName,
                 interestRateDifferential, minDifferentialLendingRate, defaultDifferentialLendingRate, maxDifferentialLendingRate,
                 isFloatingInterestRateCalculationAllowed, isVariableInstallmentsAllowed, minimumGap, maximumGap,
-                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization);
+                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization,isSecure);
 
     }
 
@@ -452,6 +456,7 @@ public class LoanProductData {
         final boolean syncExpectedWithDisbursementDate = false;
         final boolean canUseForTopup = false;
         final boolean isEqualAmortization = false;
+        final boolean isSecure = false;
 
         return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                 numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
@@ -467,7 +472,7 @@ public class LoanProductData {
                 installmentAmountInMultiplesOf, loanProductConfigurableAttributes, isLinkedToFloatingInterestRates, floatingRateId,
                 floatingRateName, interestRateDifferential, minDifferentialLendingRate, defaultDifferentialLendingRate,
                 maxDifferentialLendingRate, isFloatingInterestRateCalculationAllowed, isVariableInstallmentsAllowed, minimumGap, maximumGap,
-                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization);
+                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization,isSecure);
 
     }
     
@@ -546,6 +551,7 @@ public class LoanProductData {
         final boolean syncExpectedWithDisbursementDate = false;
         final boolean canUseForTopup = false;
         final boolean isEqualAmortization = false;
+        final boolean isSecure = false;
 
         return new LoanProductData(id, name, shortName, description, currency, principal, minPrincipal, maxPrincipal, tolerance,
                 numberOfRepayments, minNumberOfRepayments, maxNumberOfRepayments, repaymentEvery, interestRatePerPeriod,
@@ -561,7 +567,7 @@ public class LoanProductData {
                 installmentAmountInMultiplesOf, loanProductConfigurableAttributes, isLinkedToFloatingInterestRates, floatingRateId,
                 floatingRateName, interestRateDifferential, minDifferentialLendingRate, defaultDifferentialLendingRate,
                 maxDifferentialLendingRate, isFloatingInterestRateCalculationAllowed, isVariableInstallmentsAllowed, minimumGap, maximumGap,
-                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization);
+                syncExpectedWithDisbursementDate, canUseForTopup, isEqualAmortization,isSecure);
 
     }
 
@@ -600,7 +606,7 @@ public class LoanProductData {
             BigDecimal minDifferentialLendingRate, BigDecimal defaultDifferentialLendingRate, BigDecimal maxDifferentialLendingRate,
             boolean isFloatingInterestRateCalculationAllowed, final boolean isVariableInstallmentsAllowed,
             final Integer minimumGapBetweenInstallments, final Integer maximumGapBetweenInstallments, 
-            final boolean syncExpectedWithDisbursementDate, final boolean canUseForTopup, final boolean isEqualAmortization) {
+            final boolean syncExpectedWithDisbursementDate, final boolean canUseForTopup, final boolean isEqualAmortization,final boolean isSecure) {
         this.id = id;
         this.name = name;
         this.shortName = shortName;
@@ -705,6 +711,7 @@ public class LoanProductData {
         this.syncExpectedWithDisbursementDate = syncExpectedWithDisbursementDate;
         this.canUseForTopup = canUseForTopup;
         this.isEqualAmortization = isEqualAmortization;
+        this.isSecure = isSecure;
 
     }
 
@@ -842,6 +849,7 @@ public class LoanProductData {
         this.syncExpectedWithDisbursementDate = productData.syncExpectedWithDisbursementDate;
         this.canUseForTopup = productData.canUseForTopup;
         this.isEqualAmortization = productData.isEqualAmortization;
+        this.isSecure = productData.isSecure;
     }
 
     private Collection<ChargeData> nullIfEmpty(final Collection<ChargeData> charges) {
@@ -1205,6 +1213,10 @@ public class LoanProductData {
 
     public boolean isEqualAmortization() {
         return isEqualAmortization;
+    }
+    
+    public boolean isSecure() {
+        return isSecure;
     }
 
     public LocalDate getStartDate() {
