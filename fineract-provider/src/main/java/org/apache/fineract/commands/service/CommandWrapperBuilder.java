@@ -1035,6 +1035,14 @@ public class CommandWrapperBuilder {
         this.href = "/glaccounts/template";
         return this;
     }
+    
+    public CommandWrapperBuilder createBudget() {
+        this.actionName = "CREATE";
+        this.entityName = "BUDGET";
+        this.entityId = null;
+        this.href = "/budget/template";
+        return this;
+    }
 
     public CommandWrapperBuilder updateGLAccount(final Long glAccountId) {
         this.actionName = "UPDATE";
@@ -1043,12 +1051,28 @@ public class CommandWrapperBuilder {
         this.href = "/glaccounts/" + glAccountId;
         return this;
     }
+    
+    public CommandWrapperBuilder updateBudget(final Long glAccountId) {
+        this.actionName = "UPDATE";
+        this.entityName = "BUDGET";
+        this.entityId = glAccountId;
+        this.href = "/budget/" + glAccountId;
+        return this;
+    }
 
     public CommandWrapperBuilder deleteGLAccount(final Long glAccountId) {
         this.actionName = "DELETE";
         this.entityName = "GLACCOUNT";
         this.entityId = glAccountId;
         this.href = "/glaccounts/" + glAccountId;
+        return this;
+    }
+    
+    public CommandWrapperBuilder deleteBudget(final Long glAccountId) {
+        this.actionName = "DELETE";
+        this.entityName = "BUDGET";
+        this.entityId = glAccountId;
+        this.href = "/budget/" + glAccountId;
         return this;
     }
 

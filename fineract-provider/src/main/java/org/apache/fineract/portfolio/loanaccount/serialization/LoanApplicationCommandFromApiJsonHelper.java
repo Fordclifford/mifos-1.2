@@ -93,7 +93,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
             LoanApiConstants.linkAccountIdParameterName, LoanApiConstants.disbursementDataParameterName,
             LoanApiConstants.emiAmountParameterName, LoanApiConstants.maxOutstandingBalanceParameterName,
             LoanProductConstants.graceOnArrearsAgeingParameterName, LoanApiConstants.createStandingInstructionAtDisbursementParameterName,
-            LoanApiConstants.isTopup, LoanApiConstants.loanIdToClose, LoanApiConstants.datatables, LoanApiConstants.isEqualAmortizationParam));
+            LoanApiConstants.isTopup, LoanApiConstants.loanIdToClose, LoanApiConstants.datatables, LoanApiConstants.isEqualAmortizationParam,LoanApiConstants.isSecure));
 
     private final FromJsonHelper fromApiJsonHelper;
     private final CalculateLoanScheduleQueryFromApiJsonHelper apiJsonHelper;
@@ -168,6 +168,13 @@ public final class LoanApplicationCommandFromApiJsonHelper {
                     .validateForBooleanValue();
             if (isEqualAmortization && loanProduct.isInterestRecalculationEnabled()) { throw new EqualAmortizationUnsupportedFeatureException(
                     "interest.recalculation", "interest recalculation"); }
+        }
+        
+        boolean isSecure = false;
+        if (this.fromApiJsonHelper.parameterExists(LoanApiConstants.isSecure, element)) {
+        	isSecure = this.fromApiJsonHelper.extractBooleanNamed(LoanApiConstants.isSecure, element);
+            baseDataValidator.reset().parameter(LoanApiConstants.isSecure).value(isSecure).ignoreIfNull()
+                    .validateForBooleanValue();          
         }
 
         final Long productId = this.fromApiJsonHelper.extractLongNamed("productId", element);
@@ -662,6 +669,8 @@ public final class LoanApplicationCommandFromApiJsonHelper {
                         .failWithCode("not.supported.loanproduct.linked.to.floating.rate",
                                 "interestRatePerPeriod param is not supported, selected Loan Product is linked with floating interest rate.");
             }
+            
+            
 
             Boolean isFloatingInterestRate = existingLoanApplication.getIsFloatingInterestRate();
             if (this.fromApiJsonHelper.parameterExists(LoanApiConstants.isFloatingInterestRate, element)) {

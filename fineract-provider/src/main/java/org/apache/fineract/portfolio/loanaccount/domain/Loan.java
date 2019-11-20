@@ -471,6 +471,7 @@ public class Loan extends AbstractPersistableCustom<Long> {
         this.loanType = loanType;
         this.fund = fund;
         this.loanOfficer = loanOfficer;
+        this.isSecure = isSecure;
         this.loanPurpose = loanPurpose;
 
         this.transactionProcessingStrategy = transactionProcessingStrategy;
