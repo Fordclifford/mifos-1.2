@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.fineract.accounting.budget.data.BudgetData;
+import org.apache.fineract.accounting.budget.service.BudgetReadPlatformService;
 import org.apache.fineract.accounting.closure.domain.GLClosure;
 import org.apache.fineract.accounting.closure.domain.GLClosureRepository;
 import org.apache.fineract.accounting.financialactivityaccount.domain.FinancialActivityAccount;
@@ -92,8 +94,12 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final static Logger logger = LoggerFactory.getLogger(JournalEntryWritePlatformServiceJpaRepositoryImpl.class);
 
     private final GLClosureRepository glClosureRepository;
+
     private final GLAccountRepository glAccountRepository;
+
+    private final JournalEntryReadPlatformService jEntryReadPlatform;
     private final JournalEntryRepository glJournalEntryRepository;
+    private final BudgetReadPlatformService budgetReadService;
     private final OfficeRepositoryWrapper officeRepositoryWrapper;
     private final AccountingProcessorForLoanFactory accountingProcessorForLoanFactory;
     private final AccountingProcessorForSavingsFactory accountingProcessorForSavingsFactory;
@@ -102,6 +108,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private final JournalEntryCommandFromApiJsonDeserializer fromApiJsonDeserializer;
     private final AccountingRuleRepository accountingRuleRepository;
     private final GLAccountReadPlatformService glAccountReadPlatformService;
+
     private final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository;
     private final PlatformSecurityContext context;
     private final PaymentDetailWritePlatformService paymentDetailWritePlatformService;
@@ -120,12 +127,14 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final OrganisationCurrencyRepositoryWrapper organisationCurrencyRepository, final PlatformSecurityContext context,
             final PaymentDetailWritePlatformService paymentDetailWritePlatformService,
             final FinancialActivityAccountRepositoryWrapper financialActivityAccountRepositoryWrapper,
-            final CashBasedAccountingProcessorForClientTransactions accountingProcessorForClientTransactions) {
+            final CashBasedAccountingProcessorForClientTransactions accountingProcessorForClientTransactions,JournalEntryReadPlatformService jEntryRead,BudgetReadPlatformService budgetService) {
         this.glClosureRepository = glClosureRepository;
+        this.budgetReadService=budgetService;
         this.officeRepositoryWrapper = officeRepositoryWrapper;
         this.glJournalEntryRepository = glJournalEntryRepository;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.glAccountRepository = glAccountRepository;
+        this.jEntryReadPlatform=jEntryRead;
         this.accountingProcessorForLoanFactory = accountingProcessorForLoanFactory;
         this.accountingProcessorForSavingsFactory = accountingProcessorForSavingsFactory;
         this.accountingProcessorForSharesFactory = accountingProcessorForSharesFactory;
@@ -137,6 +146,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         this.paymentDetailWritePlatformService = paymentDetailWritePlatformService;
         this.financialActivityAccountRepositoryWrapper = financialActivityAccountRepositoryWrapper;
         this.accountingProcessorForClientTransactions = accountingProcessorForClientTransactions;
+       
     }
 
     @Transactional
@@ -292,7 +302,56 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
             debitsSum = debitsSum.add(debitEntryCommand.getAmount());
+            
         }
+        
+         
+        if (creditsSum.compareTo(debitsSum) != 0) { throw new JournalEntryInvalidException(
+                GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null); }
+    }
+    
+    
+    private void checkDebitAndCreditAmountsAginstBudget(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
+        // sum of all debits must be = sum of all credits
+        BigDecimal creditsSum = BigDecimal.ZERO;
+        BigDecimal debitsSum = BigDecimal.ZERO;
+        for (final SingleDebitOrCreditEntryCommand creditEntryCommand : credits) {
+            if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
+                    GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
+            creditsSum = creditsSum.add(creditEntryCommand.getAmount());
+            
+            //amount must be less than or equal to budget
+            BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
+            
+            BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
+            BigDecimal RunningBalance=dbDebits.subtract(allCredits);
+            
+            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getMaxValue();
+        if(!budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {    
+           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getAccountName(), null);    }            
+        }
+        
+        }
+        for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
+            if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
+                    GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
+            debitsSum = debitsSum.add(debitEntryCommand.getAmount());
+          
+                       
+            //amount must be less than or equal to budget
+            BigDecimal dbCredits=this.jEntryReadPlatform.accountTotal(debitEntryCommand.getGlAccountId(),1L);
+            
+            BigDecimal allDebits=this.jEntryReadPlatform.accountTotal(debitEntryCommand.getGlAccountId(),2L).add(debitEntryCommand.getAmount());;
+            BigDecimal RunningBalance=allDebits.subtract(dbCredits);
+            
+            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getMaxValue();
+        if(!budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getDisabled()) {    
+           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getAccountName(), null);    }            
+        }
+        }
+        
+        
+         
         if (creditsSum.compareTo(debitsSum) != 0) { throw new JournalEntryInvalidException(
                 GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null); }
     }
@@ -575,6 +634,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     private void validateBusinessRulesForJournalEntries(final JournalEntryCommand command) {
         /** check if date of Journal entry is valid ***/
         final LocalDate entryLocalDate = command.getTransactionDate();
+     
         final Date transactionDate = entryLocalDate.toDateTimeAtStartOfDay().toDate();
         // shouldn't be in the future
         final Date todaysDate = new Date();
@@ -597,8 +657,9 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
 
         checkDebitAndCreditAmounts(credits, debits);
     }
-
-    private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
+    
+    
+  private void saveAllDebitOrCreditEntries(final JournalEntryCommand command, final Office office, final PaymentDetail paymentDetail,
             final String currencyCode, final Date transactionDate,
             final SingleDebitOrCreditEntryCommand[] singleDebitOrCreditEntryCommands, final String transactionId,
             final JournalEntryType type, final String referenceNumber) {

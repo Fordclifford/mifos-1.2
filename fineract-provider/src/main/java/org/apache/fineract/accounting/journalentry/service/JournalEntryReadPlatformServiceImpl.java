@@ -35,6 +35,7 @@ import org.apache.fineract.accounting.financialactivityaccount.domain.FinancialA
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.accounting.glaccount.domain.GLAccountType;
 import org.apache.fineract.accounting.glaccount.service.GLAccountReadPlatformService;
+import org.apache.fineract.accounting.journalentry.data.AccountTotal;
 import org.apache.fineract.accounting.journalentry.data.JournalEntryAssociationParametersData;
 import org.apache.fineract.accounting.journalentry.data.JournalEntryData;
 import org.apache.fineract.accounting.journalentry.data.OfficeOpeningBalancesData;
@@ -392,11 +393,34 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
             final String sql = "select " + rm.schema() + " where journalEntry.id = ?";
 
             final JournalEntryData glJournalEntryData = this.jdbcTemplate.queryForObject(sql, rm, new Object[] { glJournalEntryId });
-
+         
             return glJournalEntryData;
         } catch (final EmptyResultDataAccessException e) {
             throw new JournalEntriesNotFoundException(glJournalEntryId);
         }
+    }
+    
+    @Override
+  public BigDecimal  accountTotal(Long accountId,Long type) {
+    	 final AccountTotalMapper rm = new AccountTotalMapper();
+         final String sql = "select sum(amount) as amount, account_id as id from acc_gl_journal_entry  where account_id = ? and reversed=0 and type_enum= ?";
+
+         final AccountTotal accData = this.jdbcTemplate.queryForObject(sql, rm, new Object[] { accountId,type });
+     
+         return  accData.getAmount();
+    
+	  
+  }
+    
+    public static class AccountTotalMapper implements RowMapper<AccountTotal>{
+    
+ 	@Override
+	public AccountTotal mapRow(ResultSet rs, int rowNum) throws SQLException {
+		 final Long id = rs.getLong("id");
+		 final BigDecimal amount=rs.getBigDecimal("amount");
+		return new AccountTotal(id, amount);
+	}
+    
     }
 
     @Override

@@ -25,6 +25,8 @@ import org.apache.fineract.accounting.budget.api.BudgetJsonInputParams;
 import org.apache.fineract.accounting.budget.command.BudgetCommand;
 import org.apache.fineract.accounting.budget.domain.Budget;
 import org.apache.fineract.accounting.budget.domain.BudgetRepository;
+import org.apache.fineract.accounting.budget.exception.BudgetInvalidAccountException;
+import org.apache.fineract.accounting.budget.exception.BudgetNotExpenseAcccountException;
 import org.apache.fineract.accounting.budget.exception.BudgetNotFoundException;
 import org.apache.fineract.accounting.budget.serialization.BudgetCommandFromApiJsonDeserializer;
 import org.apache.fineract.accounting.common.AccountingConstants;
@@ -220,8 +222,11 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
         if (parentAccountId != null) {
             parentGLAccount = this.glAccountRepository.findOne(parentAccountId);
             if (parentGLAccount == null) { throw new GLAccountNotFoundException(parentAccountId); }
-            // ensure parent is not a detail account
-//            if (parentGLAccount.isDetailAccount()) { throw new GLAccountInvalidParentException(parentAccountId); }
+            
+            if (parentGLAccount.getType()!=5) { throw new BudgetNotExpenseAcccountException(parentAccountId); }
+          
+            // ensure parent is not a header account
+            if (parentGLAccount.isHeaderAccount()) { throw new BudgetInvalidAccountException(parentAccountId); }
        }
         return parentGLAccount;
     }

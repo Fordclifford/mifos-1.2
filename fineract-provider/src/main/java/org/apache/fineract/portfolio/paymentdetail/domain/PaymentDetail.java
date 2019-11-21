@@ -25,6 +25,7 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
@@ -35,7 +36,7 @@ import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 
 @Entity
-@Table(name = "m_payment_detail")
+@Table(name = "m_payment_detail"/*, uniqueConstraints = {@UniqueConstraint(columnNames = { "receipt_number" }, name = "receipt_no_UNIQUE")} */)
 public final class PaymentDetail extends AbstractPersistableCustom<Long> {
 
     @ManyToOne

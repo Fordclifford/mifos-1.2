@@ -71,8 +71,8 @@ public class BudgetCommand {
         baseDataValidator.reset().parameter(BudgetJsonInputParams.MIN_AMOUNT.getValue()).value(this.minValue).notBlank().notLessThanMin(0)
                 .notExceedingLengthOf(45);
         
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.DISABLED.getValue()).value(this.disabled).notBlank().notNull().validateForBooleanValue();
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.ACCOUNT_ID.getValue()).value(this.accountId).ignoreIfNull()
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.DISABLED.getValue()).value(this.disabled).notBlank().validateForBooleanValue();
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.ACCOUNT_ID.getValue()).value(this.accountId).notBlank()
                 .integerGreaterThanZero();
 
 

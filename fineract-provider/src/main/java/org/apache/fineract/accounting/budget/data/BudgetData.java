@@ -131,6 +131,12 @@ public String getAccountName() {
 
 
 
+
+public Boolean getDisabled() {
+	return disabled;
+}
+
+
 public static BudgetData sensibleDefaultsForNewBudgetCreation() {
     final Long id = null;
     final Long acccountId = null;

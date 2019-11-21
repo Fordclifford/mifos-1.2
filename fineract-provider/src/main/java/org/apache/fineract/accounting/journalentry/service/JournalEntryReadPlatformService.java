@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.accounting.journalentry.service;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import org.apache.fineract.accounting.journalentry.data.JournalEntryAssociationParametersData;
@@ -36,4 +37,9 @@ public interface JournalEntryReadPlatformService {
     OfficeOpeningBalancesData retrieveOfficeOpeningBalances(Long officeId, String currencyCode);
 
     Page<JournalEntryData> retrieveJournalEntriesByEntityId(String transactionId, Long entityId, Integer entityType) ;
+
+	BigDecimal accountTotal(Long accountId, Long type);
+   
+
+	
 }

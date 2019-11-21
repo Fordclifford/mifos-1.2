@@ -29,7 +29,7 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
 
     /*** enum of reasons for invalid Journal Entry **/
     public static enum GL_JOURNAL_ENTRY_INVALID_REASON {
-        FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS;
+        BUDGET_VIOLATION,FUTURE_DATE, ACCOUNTING_CLOSED, NO_DEBITS_OR_CREDITS, DEBIT_CREDIT_SUM_MISMATCH_WITH_AMOUNT, DEBIT_CREDIT_SUM_MISMATCH, DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, GL_ACCOUNT_DISABLED, GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED, INVALID_DEBIT_OR_CREDIT_ACCOUNTS;
 
         public String errorMessage() {
             if (name().toString().equalsIgnoreCase("FUTURE_DATE")) {
@@ -46,7 +46,11 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
                 return "Both account and amount must be specified for all Debits and Credits";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_DISABLED")) {
                 return "Target account has been disabled";
-            } else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
+            }
+         else if (name().toString().equalsIgnoreCase("BUDGET_VIOLATION")) {
+            return "The sum of credits and debits exceed budget for mentioned account";
+        } 
+            else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
                 return "Invalid debit or credit accounts are passed";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED")) { return "Target account does not allow maual adjustments"; }
             return name().toString();
@@ -65,7 +69,11 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
                 return "error.msg.glJournalEntry.invalid.empty.account.or.amount";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_DISABLED")) {
                 return "error.msg.glJournalEntry.invalid.account.disabled";
-            } else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
+            } 
+         else if (name().toString().equalsIgnoreCase("BUDGET_VIOLATION")) {
+            return "error.msg.glJournalEntry.invalid.budget.violted";
+        }
+            else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
                 return "error.msg.glJournalEntry.invalid.debit.or.credit.accounts";
             } else if (name().toString().equalsIgnoreCase("GL_ACCOUNT_MANUAL_ENTRIES_NOT_PERMITTED")) { return "error.msg.glJournalEntry.invalid.account.manual.adjustments.not.permitted"; }
             return name().toString();
@@ -76,4 +84,5 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
             final String accountGLCode) {
         super(reason.errorCode(), reason.errorMessage(), date, accountName, accountGLCode);
     }
-}
+
+	}
