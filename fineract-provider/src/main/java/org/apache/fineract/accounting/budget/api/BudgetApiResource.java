@@ -177,6 +177,7 @@ public class BudgetApiResource {
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
        // JournalEntryAssociationParametersData associationParametersData = new JournalEntryAssociationParametersData(false, runningBalance);
+        System.out.println("resource account"+accountId);
         BudgetData budgetAccountData = this.budgetReadPlatformService.retrieveAccountById(accountId);
 //        if (settings.isTemplate()) {
 //        	budgetAccountData = handleTemplate(budgetAccountData);

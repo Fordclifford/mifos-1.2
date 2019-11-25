@@ -71,7 +71,7 @@ public class JournalEntryInvalidException extends AbstractPlatformDomainRuleExce
                 return "error.msg.glJournalEntry.invalid.account.disabled";
             } 
          else if (name().toString().equalsIgnoreCase("BUDGET_VIOLATION")) {
-            return "error.msg.glJournalEntry.invalid.budget.violted";
+            return "error.msg.glJournalEntry.invalid.budget.violted The sum of credits and debits exceed budget for mentioned account";
         }
             else if (name().toString().equalsIgnoreCase("INVALID_DEBIT_OR_CREDIT_ACCOUNTS")) {
                 return "error.msg.glJournalEntry.invalid.debit.or.credit.accounts";

@@ -186,39 +186,39 @@ public class LoanTransactionsApiResource {
         CommandProcessingResult result = null;
         if (is(commandParam, "repayment")) {
         
-   			 final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
-   			 final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
-   			
-   			
-   		      //  final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
-   			BuildOptions a = new BuildOptions();
-   			JsonParser ps = new JsonParser();
-   			JsonElement js = ps.parse(apiRequestBodyAsJson);
-   			JsonObject jsonObject = js.getAsJsonObject();
-
-   			JsonElement pay = jsonObject.get("paymentTypeId");
-   			if ("".equals(pay.getAsString().replaceAll("\\W", ""))) {
-   				throw new ReceiptNullException();
-   			}
-   			if (pay.getAsInt() == 4) {
-   				JsonElement r = jsonObject.get("receiptNumber");
-   				if ("".equals(r.getAsString().replaceAll("\\W", ""))) {
-   					throw new ReceiptNullException();
-   				}
-   				JsonParser p = new JsonParser();
-   				JsonElement j = p.parse(a.checkReceipt(r.toString(), tenantConnection.getSchemaName()));
-   				JsonObject job = j.getAsJsonObject();
-   				JsonElement resp = job.get("message");
-   				if (!resp.getAsBoolean()) {
-   					throw new ReceiptNumberExistException(r.toString());
-   				}
-   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
-             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-   			} else {
-   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
-             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
-   			}
-   		
+//   			 final FineractPlatformTenant tenant = ThreadLocalContextUtil.getTenant();
+//   			 final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+//   			
+//   			
+//   		      //  final FineractPlatformTenantConnection tenantConnection = tenant.getConnection();
+//   			BuildOptions a = new BuildOptions();
+//   			JsonParser ps = new JsonParser();
+//   			JsonElement js = ps.parse(apiRequestBodyAsJson);
+//   			JsonObject jsonObject = js.getAsJsonObject();
+//
+//   			JsonElement pay = jsonObject.get("paymentTypeId");
+//   			if ("".equals(pay.getAsString().replaceAll("\\W", ""))) {
+//   				throw new ReceiptNullException();
+//   			}
+//   			if (pay.getAsInt() == 4) {
+//   				JsonElement r = jsonObject.get("receiptNumber");
+//   				if ("".equals(r.getAsString().replaceAll("\\W", ""))) {
+//   					throw new ReceiptNullException();
+//   				}
+//   				JsonParser p = new JsonParser();
+//   				JsonElement j = p.parse(a.checkReceipt(r.toString(), tenantConnection.getSchemaName()));
+//   				JsonObject job = j.getAsJsonObject();
+//   				JsonElement resp = job.get("message");
+//   				if (!resp.getAsBoolean()) {
+//   					throw new ReceiptNumberExistException(r.toString());
+//   				}
+//   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
+//             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+//   			} else {
+//   			 final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
+//             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
+//   			}
+//   		
         	
             final CommandWrapper commandRequest = builder.loanRepaymentTransaction(loanId).build();
             result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);

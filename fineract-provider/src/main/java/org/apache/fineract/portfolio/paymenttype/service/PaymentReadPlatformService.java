@@ -16,16 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.paymentdetail.domain;
+package org.apache.fineract.portfolio.paymenttype.service;
 
 import java.util.List;
 
-import org.apache.fineract.portfolio.loanaccount.domain.Loan;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.apache.fineract.accounting.budget.data.BudgetData;
+import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
+import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 
-public interface PaymentDetailRepository extends JpaRepository<PaymentDetail, Long>, JpaSpecificationExecutor<Loan> {
 
 
-    // no added behaviour
+public interface PaymentReadPlatformService {
+	List<PaymentDetailData> findByReceiptNumber(String receiptNumber);  
+
+//    List<GLAccountDataForLookup> retrieveAccountsByTagId(final Long ruleId, final Integer transactionType);
 }

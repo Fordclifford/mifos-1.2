@@ -25,7 +25,7 @@ public class ReceiptNumberExistException
 {
   public ReceiptNumberExistException(String receiptNumber)
   {
-    super("error.msg.receipt.number.already.used", "Receipt number " + receiptNumber + " already used", new Object[] { receiptNumber });
+    super("error.msg.payment.exist with receipt number "+ receiptNumber+" ", "Payment with receipt number " + receiptNumber + " exist", new Object[] { receiptNumber });
   }
 }
 

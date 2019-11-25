@@ -400,17 +400,32 @@ public class JournalEntryReadPlatformServiceImpl implements JournalEntryReadPlat
         }
     }
     
-    @Override
+  //  @SuppressWarnings("null")
+	@Override
   public BigDecimal  accountTotal(Long accountId,Long type) {
+		BigDecimal amount =BigDecimal.ZERO;
+        try {
+    	
     	 final AccountTotalMapper rm = new AccountTotalMapper();
          final String sql = "select sum(amount) as amount, account_id as id from acc_gl_journal_entry  where account_id = ? and reversed=0 and type_enum= ?";
 
          final AccountTotal accData = this.jdbcTemplate.queryForObject(sql, rm, new Object[] { accountId,type });
-     
-         return  accData.getAmount();
+               
+             amount=accData.getAmount();
+             if(amount.equals(null)){
+                  System.out.println("null");
+             }
+             
+            } catch  (NullPointerException e) {
+                amount=BigDecimal.ZERO;
+        //e.printStackTrace();
+            }   //throw new JournalEntriesNotFoundException(accountId);
+            return  amount;
+            
+        }
     
 	  
-  }
+  
     
     public static class AccountTotalMapper implements RowMapper<AccountTotal>{
     

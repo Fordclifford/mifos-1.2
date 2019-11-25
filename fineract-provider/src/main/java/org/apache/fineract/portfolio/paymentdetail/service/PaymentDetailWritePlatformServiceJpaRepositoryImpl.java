@@ -18,14 +18,18 @@
  */
 package org.apache.fineract.portfolio.paymentdetail.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.portfolio.loanaccount.exception.ReceiptNumberExistException;
 import org.apache.fineract.portfolio.paymentdetail.PaymentDetailConstants;
+import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetailRepository;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentType;
 import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWrapper;
+import org.apache.fineract.portfolio.paymenttype.service.PaymentReadPlatformService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,13 +38,15 @@ import org.springframework.transaction.annotation.Transactional;
 public class PaymentDetailWritePlatformServiceJpaRepositoryImpl implements PaymentDetailWritePlatformService {
 
     private final PaymentDetailRepository paymentDetailRepository;
+    private final PaymentReadPlatformService paymentReadRepository;
     // private final CodeValueRepositoryWrapper codeValueRepositoryWrapper;
     private final PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper;
 
     @Autowired
-    public PaymentDetailWritePlatformServiceJpaRepositoryImpl(final PaymentDetailRepository paymentDetailRepository,
-            final PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper) {
+    public PaymentDetailWritePlatformServiceJpaRepositoryImpl(final PaymentReadPlatformService paymentReadRepository,
+            final PaymentTypeRepositoryWrapper paymentTyperepositoryWrapper,final PaymentDetailRepository paymentDetailRepository) {
         this.paymentDetailRepository = paymentDetailRepository;
+        this.paymentReadRepository = paymentReadRepository;
         this.paymentTyperepositoryWrapper = paymentTyperepositoryWrapper;
     }
 
@@ -51,6 +57,23 @@ public class PaymentDetailWritePlatformServiceJpaRepositoryImpl implements Payme
 
         final PaymentType paymentType = this.paymentTyperepositoryWrapper.findOneWithNotFoundDetection(paymentTypeId);
         final PaymentDetail paymentDetail = PaymentDetail.generatePaymentDetail(paymentType, command, changes);
+        
+        final String receipt = command.stringValueOfParameterNamed(PaymentDetailConstants.receiptNumberParamName);
+        if (receipt != null) {
+        	
+        	String receiptNumber=  paymentDetail.getReceiptNumber().replaceAll("\\W", "");
+        	System.out.println("receipt number"+receiptNumber);
+         List<PaymentDetailData> payments = paymentReadRepository.findByReceiptNumber(receiptNumber);
+         if(payments!=null  && !payments.isEmpty()) {
+        	
+        	 throw new ReceiptNumberExistException(receiptNumber);
+        	 //payments.size();
+         }
+        	
+        	
+        }
+      
+       
         return paymentDetail;
 
     }

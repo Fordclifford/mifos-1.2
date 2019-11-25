@@ -39,6 +39,8 @@ public class PaymentDetailData {
     private final String receiptNumber;
     @SuppressWarnings("unused")
     private final String bankNumber;
+    @SuppressWarnings("unused")
+    private final Long paymentTypeId;
 
     public PaymentDetailData(final Long id, final PaymentTypeData paymentType, final String accountNumber, final String checkNumber,
             final String routingCode, final String receiptNumber, final String bankNumber) {
@@ -49,7 +51,21 @@ public class PaymentDetailData {
         this.routingCode = routingCode;
         this.receiptNumber = receiptNumber;
         this.bankNumber = bankNumber;
+        this.paymentTypeId=null;
     }
+
+	public PaymentDetailData(Long id, Long paymentType, String accountNumber, String checkNumber,
+			String routingCode, String receiptNumber, String bankNumber) {
+		 this.id = id;
+	        this.paymentTypeId = paymentType;
+	        this.accountNumber = accountNumber;
+	        this.checkNumber = checkNumber;
+	        this.routingCode = routingCode;
+	        this.receiptNumber = receiptNumber;
+	        this.bankNumber = bankNumber;
+	        this.paymentType=null;
+		// TODO Auto-generated constructor stub
+	}
     
     
 
