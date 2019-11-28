@@ -65,7 +65,12 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             }
         }
 
-        public String schema() {
+        public GLAccountMapper() {
+        	this.associationParametersData=null;
+			// TODO Auto-generated constructor stub
+		}
+
+		public String schema() {
             StringBuilder sb = new StringBuilder();
             sb.append(
                     " gl.id as id, name as name, parent_id as parentId, gl_code as glCode, disabled as disabled, manual_journal_entries_allowed as manualEntriesAllowed, ")
@@ -216,6 +221,24 @@ public class GLAccountReadPlatformServiceImpl implements GLAccountReadPlatformSe
             if (associationParametersData.isRunningBalanceRequired()) {
                 sql.append("  ORDER BY gl_j.entry_date DESC,gl_j.id DESC LIMIT 1");
             }
+            final GLAccountData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { glAccountId });
+
+            return glAccountData;
+        } catch (final EmptyResultDataAccessException e) {
+            throw new GLAccountNotFoundException(glAccountId);
+        }
+    }
+    
+    @Override
+    public GLAccountData getGLAccountById(final long glAccountId ) {
+        try {
+
+            final GLAccountMapper rm = new GLAccountMapper();
+            final StringBuilder sql = new StringBuilder();
+            sql.append("select ").append(rm.schema());
+           
+            sql.append("where gl.id = ?");
+            
             final GLAccountData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { glAccountId });
 
             return glAccountData;

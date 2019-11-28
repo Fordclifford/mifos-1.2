@@ -18,9 +18,16 @@
  */
 package org.apache.fineract.accounting.budget.domain;
 
+import org.apache.fineract.accounting.glaccount.domain.GLAccount;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 public interface BudgetRepository extends JpaRepository<Budget, Long>, JpaSpecificationExecutor<Budget> {
+
+	GLAccount findByExpenseAccountId(Long accountId);
     // no added behaviour
+
+	GLAccount findByAssetAccountId(Long accountId);
+
+	GLAccount findByLiabilityAccountId(Long accountId);
 }

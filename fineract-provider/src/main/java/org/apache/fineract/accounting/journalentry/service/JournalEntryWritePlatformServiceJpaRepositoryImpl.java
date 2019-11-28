@@ -35,6 +35,7 @@ import org.apache.fineract.accounting.closure.domain.GLClosure;
 import org.apache.fineract.accounting.closure.domain.GLClosureRepository;
 import org.apache.fineract.accounting.financialactivityaccount.domain.FinancialActivityAccount;
 import org.apache.fineract.accounting.financialactivityaccount.domain.FinancialActivityAccountRepositoryWrapper;
+import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 import org.apache.fineract.accounting.glaccount.data.GLAccountDataForLookup;
 import org.apache.fineract.accounting.glaccount.domain.GLAccount;
 import org.apache.fineract.accounting.glaccount.domain.GLAccountRepository;
@@ -162,7 +163,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final Long accountRuleId = command.longValueOfParameterNamed(JournalEntryJsonInputParams.ACCOUNTING_RULE.getValue());
             final String currencyCode = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.CURRENCY_CODE.getValue());
 
-            validateBusinessRulesForJournalEntries(journalEntryCommand);
+            validateBusinessRulesForJournalEntries(journalEntryCommand,command);
 
             /** Capture payment details **/
             final Map<String, Object> changes = new LinkedHashMap<>();
@@ -185,7 +186,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                         checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(),
                                 journalEntryCommand.getDebits());
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
-                        checkDebitAndCreditAmountsAginstBudget(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
+                        checkDebitAndCreditAmountsAginstBudget(journalEntryCommand.getCredits(), journalEntryCommand.getDebits(),command);
                     }
 
                     saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactionDate,
@@ -205,7 +206,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
                         checkDebitOrCreditAccountsAreValid(accountingRule, journalEntryCommand.getCredits(),
                                 journalEntryCommand.getDebits());
                         checkDebitAndCreditAmounts(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
-                        checkDebitAndCreditAmountsAginstBudget(journalEntryCommand.getCredits(), journalEntryCommand.getDebits());
+                        checkDebitAndCreditAmountsAginstBudget(journalEntryCommand.getCredits(), journalEntryCommand.getDebits(),command);
                         
                     }
 
@@ -314,7 +315,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     }
     
     
-    private void checkDebitAndCreditAmountsAginstBudget(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits) {
+    private void checkDebitAndCreditAmountsAginstBudget(final SingleDebitOrCreditEntryCommand[] credits, final SingleDebitOrCreditEntryCommand[] debits, JsonCommand command) {
         // sum of all debits must be = sum of all credits
         BigDecimal creditsSum = BigDecimal.ZERO;
         BigDecimal debitsSum = BigDecimal.ZERO;
@@ -322,47 +323,87 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             if (creditEntryCommand.getAmount() == null || creditEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
             creditsSum = creditsSum.add(creditEntryCommand.getAmount());
+    
+            BudgetData assetAccount=this.budgetReadService.getAccountById(creditEntryCommand.getGlAccountId());
+            if(assetAccount!=null) {
+            	 BigDecimal budgetAmount=assetAccount.getAmount();
+            	  System.out.println("budget Amount"+budgetAmount);
+                
+                //amount must be less than or equal to budget
+            	 BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
+               System.out.println("all credita"+allCredits);
+               BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
+               System.out.println("db debits"+dbDebits);
+               
+               BigDecimal RunningBalance=dbDebits.subtract(allCredits);
+               System.out.println("Balance"+RunningBalance);
+                
+                
+                if(!budgetReadService.getAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {   
+                	
+                   if(budgetAmount.compareTo(RunningBalance)==-1) {
+                	   
+                	   System.out.println("Budget violated"+RunningBalance);
+                	   
+                	   throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.getAccountById(creditEntryCommand.getGlAccountId()).getExpenseAccountName(), null);    }            
+                else {
+                	 /** Capture payment details **/
+                    final Map<String, Object> changes = new LinkedHashMap<>();
+                  
+                    /** Set a transaction Id and save these Journal entries **/
+                    final Long officeId = command.longValueOfParameterNamed(JournalEntryJsonInputParams.OFFICE_ID.getValue());
+                    final Date transactDate = command.DateValueOfParameterNamed(JournalEntryJsonInputParams.TRANSACTION_DATE.getValue());
+                    
+                	// final LocalDate transactionDate = command.localDateValueOfParameterNamed(JournalEntryJsonInputParams.TRANSACTION_DATE.getValue());
+                     final String transactionId = generateTransactionId(officeId);
+                     final String referenceNumber = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.REFERENCE_NUMBER.getValue());
+                     final String comments = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.COMMENTS.getValue());
+         
+                	 final Office office = this.officeRepositoryWrapper.findOneWithNotFoundDetection(officeId);
+                      final String currencyCode = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.CURRENCY_CODE.getValue());
+                      final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createAndPersistPaymentDetail(command, changes);
+                      Long expenseId=budgetReadService.getAccountById(creditEntryCommand.getGlAccountId()).getExpenseAccountId();
+                      final GLAccount glAccount = this.glAccountRepository.findOne(expenseId);
+                      if (glAccount == null) { throw new GLAccountNotFoundException(expenseId); }
+
+//                	  final JournalEntryCommand journalEntryCommand = new JournalEntryCommand(officeId, currencyCode, transactionDate, comments, credits, debits, referenceNumber, accountingRuleId, amount, paymentTypeId, accountNumber, checkNumber, receiptNumber, bankNumber, routingCode);
+//                	  
+//                	saveAllDebitOrCreditEntries(journalEntryCommand, office, paymentDetail, currencyCode, transactDate, journalEntryCommand.getCredits(), transactionId, JournalEntryType.CREDIT, referenceNumber);
+//               
+                	final JournalEntry glJournal= JournalEntry.createNew(office, paymentDetail, glAccount, currencyCode, transactionId,
+                            true, transactDate, JournalEntryType.CREDIT, creditEntryCommand.getAmount(), comments+"Contra Entry for transaction "+transactionId, null, null, referenceNumber,
+                            null, null, null, null);
+                    this.glJournalEntryRepository.saveAndFlush(glJournal);
+                
+                
+                }
+            	
+            }
+            }
             
-            //amount must be less than or equal to budget
-         BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
-            System.out.println("all credita"+allCredits);
-            BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
-            System.out.println("db debits"+dbDebits);
-            
-            BigDecimal RunningBalance=dbDebits.subtract(allCredits);
-            System.out.println("Balance"+RunningBalance);
-            
-            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getMaxValue();
-        if(!budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {    
-           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getAccountName(), null);    }            
-        }
+//            
+//            //amount must be less than or equal to budget
+//         BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
+//            System.out.println("all credita"+allCredits);
+//            BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
+//            System.out.println("db debits"+dbDebits);
+//            
+//            BigDecimal RunningBalance=dbDebits.subtract(allCredits);
+//            System.out.println("Balance"+RunningBalance);
+//            
+//            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getMaxValue();
+//        if(!budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {    
+//           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getAccountName(), null);    }            
+//        }
         
         }
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
                     GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_ACCOUNT_OR_AMOUNT_EMPTY, null, null, null); }
             debitsSum = debitsSum.add(debitEntryCommand.getAmount());
-                      
-            //amount must be less than or equal to budget
-            BigDecimal dbCredits=this.jEntryReadPlatform.accountTotal(debitEntryCommand.getGlAccountId(),1L);
-            System.out.println("db credits"+dbCredits);
-            BigDecimal allDebits=this.jEntryReadPlatform.accountTotal(debitEntryCommand.getGlAccountId(),2L).add(debitEntryCommand.getAmount());
-            System.out.println("all debits"+allDebits);
-            BigDecimal RunningBalance=allDebits.subtract(dbCredits);
-            System.out.println("difference"+RunningBalance);
             
-            
-            
-            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getMaxValue();
-            
-           
-        if(!budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getDisabled()) {    
-           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(debitEntryCommand.getGlAccountId()).getAccountName(), null);    }            
-        }
         }
         
-        
-         
         if (creditsSum.compareTo(debitsSum) != 0) { throw new JournalEntryInvalidException(
                 GL_JOURNAL_ENTRY_INVALID_REASON.DEBIT_CREDIT_SUM_MISMATCH, null, null, null); }
     }
@@ -642,7 +683,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
         }
     }
     
-    private void validateBusinessRulesForJournalEntries(final JournalEntryCommand command) {
+    private void validateBusinessRulesForJournalEntries(final JournalEntryCommand command,JsonCommand cmd) {
         /** check if date of Journal entry is valid ***/
         final LocalDate entryLocalDate = command.getTransactionDate();
      
@@ -670,7 +711,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
       //  System.out.println("credits"+credits.toString());
       //  System.out.println("debits"+debits.toString());
         
-        checkDebitAndCreditAmountsAginstBudget(credits, debits);
+        checkDebitAndCreditAmountsAginstBudget(credits, debits,cmd);
         
         
     }
@@ -744,7 +785,7 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             final Office office = this.officeRepositoryWrapper.findOneWithNotFoundDetection(officeId);
             final String currencyCode = command.stringValueOfParameterNamed(JournalEntryJsonInputParams.CURRENCY_CODE.getValue());
 
-            validateBusinessRulesForJournalEntries(journalEntryCommand);
+            validateBusinessRulesForJournalEntries(journalEntryCommand,command);
 
             /**
              * revert old journal entries

@@ -21,7 +21,10 @@ package org.apache.fineract.accounting.budget.service;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -38,11 +41,14 @@ import org.apache.fineract.accounting.glaccount.domain.GLAccountType;
 import org.apache.fineract.accounting.glaccount.domain.GLAccountUsage;
 import org.apache.fineract.accounting.glaccount.exception.GLAccountInvalidClassificationException;
 import org.apache.fineract.accounting.glaccount.exception.GLAccountNotFoundException;
+import org.apache.fineract.accounting.glaccount.service.GLAccountReadPlatformService;
+import org.apache.fineract.accounting.glaccount.service.GLAccountReadPlatformServiceImpl;
 import org.apache.fineract.accounting.journalentry.data.JournalEntryAssociationParametersData;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSource;
+import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -54,6 +60,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
 
     private final JdbcTemplate jdbcTemplate;
     private final GLAccountRepository glAccountRepository;
+    //private final static GLAccountRepository lglAccountRepository;
     private final static String nameDecoratedBaseOnHierarchy = "concat(substring('........................................', 1, ((LENGTH(hierarchy) - LENGTH(REPLACE(hierarchy, '.', '')) - 1) * 4)), name)";
 
     @Autowired
@@ -63,20 +70,25 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
     }
     
      private static final class BudgetMapper implements RowMapper<BudgetData> {
+    	  private final GLAccountRepository glAccountRepository;
 
       //  private final JournalEntryAssociationParametersData associationParametersData;
+    	  @Autowired
+    	    public BudgetMapper(GLAccountRepository glAccountRepository ) {    	       
+    	        this.glAccountRepository=glAccountRepository;
+    	    }
 
-//        public BudgetMapper() {
-//           
-//        }
+//     		public BudgetMapper() {
+//		// TODO Auto-generated constructor stub
+//	}
 
-        public String schema() {
+			public String schema() {
             StringBuilder sb = new StringBuilder();
-            sb.append(" b.id as id,b.disabled, b.account_id as accountId,gl.name as accountName, b.min_amount as minAmount, b.max_amount as maxAmount");
+            sb.append(" b.id,b.disabled,b.create_date as createDate,b.year, b.expense_account_id as expenseAccountId,b.asset_account_id as assetAccountId,b.liability_account_id as liabilityAccountId, b.amount, b.description,b.name,(SELECT NAME FROM acc_gl_account g WHERE g.id=b.liability_account_id) AS liabilityAccountName,(SELECT NAME FROM acc_gl_account g WHERE g.id=b.expense_account_id) AS expenseAccountName,(SELECT NAME FROM acc_gl_account g WHERE g.id=b.asset_account_id) AS assetAccountName,b.from_date as fromDate,b.to_date as toDate ");
 //            if (this.associationParametersData.isRunningBalanceRequired()) {
 //                sb.append(",gl_j.organization_running_balance as organizationRunningBalance ");
 //            }
-            sb.append(" from gl_acc_budget b inner join acc_gl_account gl on gl.id=b.account_id ");
+            sb.append(" from gl_acc_budget b ");
 //            if (this.associationParametersData.isRunningBalanceRequired()) {
 //                sb.append("left outer Join acc_gl_journal_entry gl_j on gl_j.account_id = gl.id");
 //            }
@@ -86,15 +98,29 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
         @Override
         public BudgetData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
 
-            final Long id = rs.getLong("id");
-            final BigDecimal maxValue = rs.getBigDecimal("maxAmount");
-            final Long accountId = JdbcSupport.getLong(rs, "accountId");
-            final BigDecimal minValue = rs.getBigDecimal("minAmount");
-            final String accountName = rs.getString("accountName"); 
-            final Boolean disabled = rs.getBoolean("disabled"); 
-           
-           
-            return new BudgetData(id,minValue, accountId, maxValue,accountName,disabled);
+           final Long id = rs.getLong("id");
+           final Long expenseAccountId = JdbcSupport.getLong(rs, "expenseAccountId");
+           final Long year = JdbcSupport.getLong(rs, "year");
+           final Long assetAccountId = JdbcSupport.getLong(rs, "assetAccountId");
+           final Long liabilityAccountId = JdbcSupport.getLong(rs, "liabilityAccountId");
+           final BigDecimal amount = rs.getBigDecimal("amount");
+           final String name = rs.getString("name"); 
+           final String description = rs.getString("description"); 
+           final Boolean disabled = rs.getBoolean("disabled");     
+                   
+           final LocalDate createDate = JdbcSupport.getLocalDate(rs, "createDate");
+           final LocalDate fromDate = JdbcSupport.getLocalDate(rs, "fromDate");
+           final LocalDate toDate = JdbcSupport.getLocalDate(rs, "toDate");
+                    
+           final String assetAccountName = rs.getString("assetAccountName"); 
+           final String expenseAccountName = rs.getString("expenseAccountName"); 
+           final String liabilityAccountName = rs.getString("liabilityAccountName"); 
+         
+        //   final GLAccount gl= glAccountRepository.findOne(expenseAccountId);
+          // final String assetAccountName = glAccountRepository.getOne(assetAccountId).getName();
+           System.out.println("assetAcc"+assetAccountName);
+          
+            return new BudgetData(expenseAccountName, liabilityAccountName, assetAccountName, id, amount, expenseAccountId, liabilityAccountId, assetAccountId, disabled, description, name,fromDate,toDate,year,createDate);
         
     }
     }
@@ -104,7 +130,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
        
 
 
-        final BudgetMapper rm = new BudgetMapper();
+        final BudgetMapper rm = new BudgetMapper(glAccountRepository);
         String sql = "select " + rm.schema();
         // append SQL statement for fetching account totals
 //        if (associationParametersData!=null) {
@@ -126,7 +152,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
         if (filtersPresent) {
             boolean firstWhereConditionAdded = false;
             if (accountId != null) {
-                sql += " account_id like ?";
+                sql += " expense_account_id like ?";
                 paramaterArray[arrayPos] = accountId;
                 arrayPos = arrayPos + 1;
                 firstWhereConditionAdded = true;
@@ -135,7 +161,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
                 if (firstWhereConditionAdded) {
                     sql += " and ";
                 }
-                sql += " ( disabled like %?% or min_value like %?% )";
+                sql += " (description like %?% or name like %?% or liability_account_id like %?% or expense_account_id like %?% or asset_account_id like %?% or disabled like %?% or amount like %?% )";
                 paramaterArray[arrayPos] = searchParam;
                 arrayPos = arrayPos + 1;
                 paramaterArray[arrayPos] = searchParam;
@@ -180,6 +206,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
         }
 
         sql+=" ORDER BY b.id ASC";
+        System.out.println(sql);
 
         final Object[] finalObjectArray = Arrays.copyOf(paramaterArray, arrayPos);
         return this.jdbcTemplate.query(sql, rm, finalObjectArray);
@@ -189,7 +216,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
     public BudgetData retrieveBudgetById(final long budgetId) {
         try {
 
-            final BudgetMapper rm = new BudgetMapper();
+            final BudgetMapper rm = new BudgetMapper(glAccountRepository);
             final StringBuilder sql = new StringBuilder();
             sql.append("select ").append(rm.schema());
            
@@ -210,7 +237,7 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
     public BudgetData retrieveAccountById(final long accountId) {
         try {
         	
-        	System.out.println("db acccount Id "+accountId);
+        //	System.out.println("db acccount Id "+accountId);
         	
         	
             final GLAccount glAccount = this.glAccountRepository.findOne(accountId);
@@ -218,11 +245,11 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
             
 
 
-            final BudgetMapper rm = new BudgetMapper();
+            final BudgetMapper rm = new BudgetMapper(glAccountRepository);
             final StringBuilder sql = new StringBuilder();
             sql.append("select ").append(rm.schema());
            
-            sql.append("where b.account_id = ?");
+            sql.append("where b.expense_account_id = ?");
            // System.out.println("query"+sql.toString());
             
             final BudgetData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { accountId });
@@ -230,6 +257,80 @@ public class BudgetReadPlatformServiceImpl implements BudgetReadPlatformService 
             return glAccountData;
         } catch (final EmptyResultDataAccessException e) {
             throw new BudgetNotFoundException(accountId);
+        }
+    }
+    
+    @Override
+    public BudgetData retrieveByAsetAccountId(final long accountId,Long year) {
+        try {
+        	
+        //	System.out.println("db acccount Id "+accountId);
+        	
+        	
+            final GLAccount glAccount = this.glAccountRepository.findOne(accountId);
+            if (glAccount == null ) { throw new GLAccountNotFoundException(accountId); }
+            
+
+
+            final BudgetMapper rm = new BudgetMapper(glAccountRepository);
+            final StringBuilder sql = new StringBuilder();
+            sql.append("select ").append(rm.schema());
+           
+            sql.append("where b.asset_account_id = ? and year = ? ");
+            System.out.println("query"+sql.toString());
+            
+            final BudgetData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { accountId,year });
+
+            return glAccountData;
+        } catch (final EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+    
+    @Override
+    public BudgetData getExpenseAccountById(final long accountId) {
+        try {
+        	
+        	final BudgetMapper rm = new BudgetMapper(glAccountRepository);
+            final StringBuilder sql = new StringBuilder();
+            sql.append("select ").append(rm.schema());
+           
+            sql.append("where b.expense_account_id = ?");
+           System.out.println("query"+sql.toString());
+            
+            final BudgetData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { accountId });
+
+            return glAccountData;
+        } catch (final EmptyResultDataAccessException e) {
+           return null;
+        }
+    }
+    
+    
+    @Override
+    public BudgetData getAccountById(final long accountId) {
+        try {
+        	
+        	System.out.println("db acccount Id "+accountId);
+        	
+        	
+//            final GLAccount glAccount = this.glAccountRepository.findOne(accountId);
+//            if (glAccount == null ) { throw new GLAccountNotFoundException(accountId); }
+//            
+
+
+            final BudgetMapper rm = new BudgetMapper(glAccountRepository);
+            final StringBuilder sql = new StringBuilder();
+            sql.append("select ").append(rm.schema());
+           
+            sql.append("where b.asset_account_id = ? order by id desc limit 1");
+           //System.out.println("query"+sql.toString());
+            
+            final BudgetData glAccountData = this.jdbcTemplate.queryForObject(sql.toString(), rm, new Object[] { accountId });
+
+            return glAccountData;
+        } catch (final EmptyResultDataAccessException e) {
+           return null;
         }
     }
 

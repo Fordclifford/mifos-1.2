@@ -33,6 +33,7 @@ import org.apache.fineract.infrastructure.core.serialization.AbstractFromApiJson
 import org.apache.fineract.infrastructure.core.serialization.FromApiJsonDeserializer;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.portfolio.loanaccount.guarantor.command.GuarantorCommand;
+import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -64,12 +65,23 @@ public final class BudgetCommandFromApiJsonDeserializer extends AbstractFromApiJ
         final JsonElement element = this.fromApiJsonHelper.parse(json);
 
         final Long id = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.ID.getValue(), element);
-        final BigDecimal maxValue = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(BudgetJsonInputParams.MAX_AMOUNT.getValue(), element);
+        final BigDecimal amount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(BudgetJsonInputParams.AMOUNT.getValue(), element);
+        final String name = this.fromApiJsonHelper.extractStringNamed(BudgetJsonInputParams.AMOUNT.getValue(), element);
+        final String description = this.fromApiJsonHelper.extractStringNamed(BudgetJsonInputParams.DESCRIPTION.getValue(), element);
         final Boolean disabled = this.fromApiJsonHelper.extractBooleanNamed(BudgetJsonInputParams.DISABLED.getValue(), element);
         
-        final Long accountId = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.ACCOUNT_ID.getValue(), element);
-        final BigDecimal minAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(BudgetJsonInputParams.MIN_AMOUNT.getValue(), element);
+        final Long year = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.YEAR.getValue(), element);
+        final LocalDate fromDate = this.fromApiJsonHelper.extractLocalDateNamed(BudgetJsonInputParams.FROM_DATE.getValue(), element);
+        final LocalDate toDate = this.fromApiJsonHelper.extractLocalDateNamed(BudgetJsonInputParams.TO_DATE.getValue(), element);
+        final LocalDate createDate = this.fromApiJsonHelper.extractLocalDateNamed(BudgetJsonInputParams.CREATE_DATE.getValue(), element);
+        
+        
+        
+        final Long expenseAccount = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue(), element);
+        final Long assetAcount = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue(), element);
+        final Long liabilityAccount = this.fromApiJsonHelper.extractLongNamed(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue(), element);
+        
        
-        return new BudgetCommand(id,minAmount,maxValue,accountId,disabled);
+        return new BudgetCommand(id,amount,expenseAccount,liabilityAccount,assetAcount,disabled,description,name,fromDate,toDate,createDate,year);
     }
 }

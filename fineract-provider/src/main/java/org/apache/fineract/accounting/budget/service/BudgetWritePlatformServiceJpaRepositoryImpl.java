@@ -23,9 +23,12 @@ import java.util.Map;
 
 import org.apache.fineract.accounting.budget.api.BudgetJsonInputParams;
 import org.apache.fineract.accounting.budget.command.BudgetCommand;
+import org.apache.fineract.accounting.budget.data.BudgetData;
 import org.apache.fineract.accounting.budget.domain.Budget;
 import org.apache.fineract.accounting.budget.domain.BudgetRepository;
+import org.apache.fineract.accounting.budget.exception.AccountUsedException;
 import org.apache.fineract.accounting.budget.exception.BudgetInvalidAccountException;
+import org.apache.fineract.accounting.budget.exception.BudgetInvalidAccountTypeException;
 import org.apache.fineract.accounting.budget.exception.BudgetNotExpenseAcccountException;
 import org.apache.fineract.accounting.budget.exception.BudgetNotFoundException;
 import org.apache.fineract.accounting.budget.serialization.BudgetCommandFromApiJsonDeserializer;
@@ -69,6 +72,7 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
 
     private final BudgetRepository budgetRepository;
     private final GLAccountRepository glAccountRepository;
+    private final BudgetReadPlatformService budgetRead;
     //private final JournalEntryRepository glJournalEntryRepository;
     private final BudgetCommandFromApiJsonDeserializer fromApiJsonDeserializer;
     private final CodeValueRepositoryWrapper codeValueRepositoryWrapper;
@@ -77,12 +81,13 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
     @Autowired
     public BudgetWritePlatformServiceJpaRepositoryImpl(final BudgetRepository budgetRepository,GLAccountRepository glAccountRepository,
             final BudgetCommandFromApiJsonDeserializer fromApiJsonDeserializer,
-            final CodeValueRepositoryWrapper codeValueRepositoryWrapper, final RoutingDataSource dataSource) {
+            final CodeValueRepositoryWrapper codeValueRepositoryWrapper, final RoutingDataSource dataSource,final BudgetReadPlatformService budgetAcc ) {
         this.budgetRepository = budgetRepository;  
         this.glAccountRepository=glAccountRepository;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.codeValueRepositoryWrapper = codeValueRepositoryWrapper;
         this.jdbcTemplate = new JdbcTemplate(dataSource);
+        this.budgetRead=budgetAcc;
     }
 
     @Transactional
@@ -93,23 +98,33 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
             accountCommand.validateForCreate();
 
             // check parent is valid
-            final Long parentId = command.longValueOfParameterNamed(BudgetJsonInputParams.ACCOUNT_ID.getValue());
-            GLAccount accountId = null;
-            if (parentId != null) {
-            	accountId = validateParentGLAccount(parentId);
+            final Long expenseAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue());
+            final Long assetAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue());
+            final Long liabilityAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue());
+            final Long year = command.longValueOfParameterNamed(BudgetJsonInputParams.YEAR.getValue());
+            
+            GLAccount expenseAccount = null;
+            GLAccount liabilityAccount = null;
+            GLAccount assetAccount = null;
+            if (expenseAccountId != null && liabilityAccountId != null && assetAccountId != null ) {
+            	//expenseAccount = validateParentGLAccount(expenseAccountId);
+            	expenseAccount = validateTypeGLAccount(expenseAccountId, GLAccountType.EXPENSE.getValue());
+            	
+            	
+            	assetAccount = validateTypeGLAccount(assetAccountId, GLAccountType.ASSET.getValue());
+            	liabilityAccount= validateTypeGLAccount(liabilityAccountId, GLAccountType.LIABILITY.getValue());
+            	BudgetData checkAsset =budgetRead.retrieveByAsetAccountId(assetAccountId, year);
+            	  
+            	  	
+            	  	if(	checkAsset!=null){
+            	  		throw new AccountUsedException(assetAccountId,year);
+            	  		
+            	  	}
+            	            	
             }
 
-//            CodeValue glAccountTagType = null;
-//            final Long tagId = command.longValueOfParameterNamed(GLAccountJsonInputParams.TAGID.getValue());
-//            final Long type = command.longValueOfParameterNamed(GLAccountJsonInputParams.TYPE.getValue());
-//            final GLAccountType accountType = GLAccountType.fromInt(type.intValue());
-//
-//            if (tagId != null) {
-//                glAccountTagType = retrieveTagId(tagId, accountType);
-//            }
-
-            final Budget budgetAccount = Budget.fromJson(accountId, command);
-
+            final Budget budgetAccount = Budget.fromJson(liabilityAccount,expenseAccount,assetAccount,command);
+          
             this.budgetRepository.saveAndFlush(budgetAccount);
 
            // glAccount.generateHierarchy();
@@ -123,7 +138,7 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
         }
     }
 
-    @Transactional
+	@Transactional
     @Override
     public CommandProcessingResult updateBudget(final Long glAccountId, final JsonCommand command) {
         try {
@@ -136,7 +151,9 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
 //									.getValue())) {
 //				validateForAttachedProduct(glAccountId);
 //			}
-            final Long parentId = command.longValueOfParameterNamed(BudgetJsonInputParams.ACCOUNT_ID.getValue());
+            final Long expenseAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue());
+            final Long assetAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue());
+            final Long liabilityeAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue());
            //   if (glAccountId.equals(parentId)) { throw new InvalidParentGLAccountHeadException(glAccountId, parentId); }
             // is the glAccount valid
             final Budget budgetAccount = this.budgetRepository.findOne(glAccountId);
@@ -145,9 +162,21 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
             final Map<String, Object> changesOnly = budgetAccount.update(command);
 
             // is the new parent valid
-            if (changesOnly.containsKey(BudgetJsonInputParams.ACCOUNT_ID.getValue())) {
-                final GLAccount accountId = validateParentGLAccount(parentId);
-                budgetAccount.updateParentAccount(accountId);
+            if (changesOnly.containsKey(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
+                final GLAccount asset = validateParentGLAccount(assetAcc);
+               
+                budgetAccount.updateAssetAccount(asset);
+              
+            }
+            if (changesOnly.containsKey(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue())) {
+               
+                final GLAccount expense = validateParentGLAccount(expenseAcc);
+                 budgetAccount.updateExpenseAccount(expense);
+              
+            }
+            if (changesOnly.containsKey(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue())) {
+                final GLAccount liability = validateParentGLAccount(liabilityeAcc);
+                budgetAccount.updateLiabilityAccount(liability);
             }
 
 //            if (changesOnly.containsKey(GLAccountJsonInputParams.TAGID.getValue())) {
@@ -229,6 +258,21 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
             if (parentGLAccount.isHeaderAccount()) { throw new BudgetInvalidAccountException(parentAccountId); }
        }
         return parentGLAccount;
+    }
+    
+    private GLAccount validateTypeGLAccount(final Long accountId,Integer type) {
+        GLAccount account= null;
+        if (accountId != null) {
+        	account = this.glAccountRepository.findOne(accountId);
+            if (account == null) { throw new GLAccountNotFoundException(accountId); }
+            
+            if (account.getType()!=type) { throw new BudgetInvalidAccountTypeException(account.getId(),GLAccountType.fromInt(account.getType()).getCode(),GLAccountType.fromInt(type).getCode()); }
+            
+          
+            // ensure parent is not a header account
+            if (account.isHeaderAccount()) { throw new BudgetInvalidAccountException(accountId); }
+       }
+        return account;
     }
 
     /**

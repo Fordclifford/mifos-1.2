@@ -16,33 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.accounting.budget.service;
+package org.apache.fineract.accounting.budget.exception;
 
-import java.util.Date;
-import java.util.List;
+import org.apache.fineract.accounting.glaccount.domain.GLAccountType;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainRuleException;
 
-import org.apache.fineract.accounting.budget.data.BudgetData;
-import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+/**
+ * A {@link RuntimeException} thrown when trying to map invalid parents to a GL
+ * account
+ */
+public class BudgetInvalidAccountTypeException extends AbstractPlatformDomainRuleException {
 
-
-
-public interface BudgetReadPlatformService {
-
-    List<BudgetData> retrieveAll(Integer accountId, String searchParam);
-
-    BudgetData retrieveBudgetById(long budgetId);
-    BudgetData retrieveAccountById(long accountId);
-    BudgetData retrieveNewBudgetDetails();
-
-	BudgetData getAccountById(long accountId);
-
-	
-	BudgetData retrieveByAsetAccountId(long accountId, Long year);
-
-	BudgetData getExpenseAccountById(long accountId);
-    
-    
-  
-
-//    List<GLAccountDataForLookup> retrieveAccountsByTagId(final Long ruleId, final Integer transactionType);
+    public BudgetInvalidAccountTypeException(final long glAccountId,String type,String required) {
+        super("error.msg.glaccount.type.invalid", "The account with id " + glAccountId
+                + " is a "+ type +" account and cannot be used as a "+ required, glAccountId);
+    }
 }

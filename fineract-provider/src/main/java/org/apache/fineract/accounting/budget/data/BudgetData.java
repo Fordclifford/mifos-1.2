@@ -19,7 +19,9 @@
 package org.apache.fineract.accounting.budget.data;
 
 import java.math.BigDecimal;
+import org.joda.time.LocalDate;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.criteria.Predicate.BooleanOperator;
@@ -40,57 +42,155 @@ import org.apache.fineract.infrastructure.core.data.EnumOptionData;
 @SuppressWarnings("unused")
 public class BudgetData {
 
-    private final Long id;
-    private final BigDecimal minValue;
-    private final Long glId;
-    private final BigDecimal maxValue;
+ 
    // private final GLAccountData account;
-    private final String accountName;
+    private final String expenseAccountName;
+    private final String liabilityAccountName;
+    private final String assetAccountName;
+   private transient Integer rowIndex;
+   private final Long id;
+    private final BigDecimal amount;
+    private final Long expenseAccountId;
+    private final Long liabilityAccountId;
+    private final Long assetAccountId;
     private final Boolean disabled;
-   
-    private transient Integer rowIndex;
+    private final String description;
+    private final String name;
+    private final LocalDate fromDate;
+    private final LocalDate toDate;
+    private final LocalDate createDate;
+    private final Long year;
 
 
-	public static BudgetData importInstance(BigDecimal minValue,Long glId, BigDecimal maxValue, 
-            Integer rowIndex,Boolean disabled){
-        return new BudgetData(minValue, glId, maxValue, rowIndex,disabled);
+
+	public static BudgetData importInstance(BigDecimal amount,Long expenseAccountId ,Long liabilityAccountId ,Long assetAccountId, 
+            Integer rowIndex,Boolean disabled, String name, String description,LocalDate fromDate,LocalDate toDate,Long year,LocalDate createDate){
+        return new BudgetData(amount, expenseAccountId, liabilityAccountId, assetAccountId,rowIndex,disabled,name,description,fromDate,toDate,year,createDate);
     }
 
 
-private BudgetData(final BigDecimal minValue,final Long glId, final BigDecimal maxValue,final Integer rowIndex,final Boolean disabled) {
-	this.minValue = minValue;
-	this.glId = glId;
-	this.maxValue = maxValue;
-	this.accountName = null;
+//
+//
+//private BudgetData(Long id,BigDecimal minValue, Long glId, BigDecimal maxValue , Boolean disabled) {
+//	this.minValue=minValue;
+//	this.glId=glId;
+//	this.maxValue=maxValue;
+//	this.disabled=disabled;
+//	//this.account=null;
+//	this.accountName=null;
+//	this.id=id;
+//	
+//}
+
+
+
+
+
+
+
+public BudgetData(String expenseAccountName, String liabilityAccountName, String assetAccountName, Long id,
+		BigDecimal amount, Long expenseAccountId, Long liabilityAccountId, Long assetAccountId, Boolean disabled,
+		String description, String name,LocalDate fromDate,LocalDate toDate,Long year,LocalDate createDate) {
+	this.expenseAccountName = expenseAccountName;
+	this.liabilityAccountName = liabilityAccountName;
+	this.assetAccountName = assetAccountName;
+	this.id = id;
+	this.amount = amount;
+	this.expenseAccountId = expenseAccountId;
+	this.liabilityAccountId = liabilityAccountId;
+	this.assetAccountId = assetAccountId;
+	this.disabled = disabled;
+	this.description = description;
+	this.name = name;
+	this.fromDate=fromDate;
+	this.toDate=toDate;
+	this.year=year;
+	this.createDate=createDate;
+}
+
+
+private BudgetData(final BigDecimal amount,final Long expenseAccountId,final Long liabilityAccountId,final Long assetAccountId,
+		final Integer rowIndex, final Boolean disabled, final String name, final String description,LocalDate fromDate,LocalDate toDate,Long year,LocalDate createDate) {
+	this.amount = amount;
+	this.expenseAccountId = expenseAccountId;
+	this.liabilityAccountId = liabilityAccountId;
+	this.assetAccountId = assetAccountId;
+	this.disabled = disabled;
+	this.description = description;
+	this.name = name;
 	this.rowIndex=rowIndex;
-	this.disabled=disabled;
-	this.id=null;
-}
-
-
-private BudgetData(Long id,BigDecimal minValue, Long glId, BigDecimal maxValue , Boolean disabled) {
-	this.minValue=minValue;
-	this.glId=glId;
-	this.maxValue=maxValue;
-	this.disabled=disabled;
-	//this.account=null;
-	this.accountName=null;
-	this.id=id;
+	this.expenseAccountName = null;
+	this.liabilityAccountName = null;
+	this.assetAccountName = null;
+	this.id = null;
+	this.fromDate=fromDate;
+	this.toDate=toDate;
+	this.year=year;
+	this.createDate=createDate;
 	
+	// TODO Auto-generated constructor stub
 }
 
-public BudgetData(Long id,BigDecimal minValue, Long glId, BigDecimal maxValue,String accountName,Boolean disabled) {
-	this.minValue=minValue;
-	this.glId=glId;
-	this.maxValue=maxValue;	
-	this.disabled=disabled;
-	this.accountName=accountName;
-	this.id=id;
-	
+private BudgetData(String liabilityAccountName, String assetAccountName, Long id,
+		BigDecimal amount, Long expenseAccountId, Long liabilityAccountId, Long assetAccountId, Boolean disabled,
+		String description, String name,String expenseAccountName,LocalDate fromDate,LocalDate toDate,Long year,LocalDate createDate) {
+	this.expenseAccountName = expenseAccountName;
+	this.liabilityAccountName = liabilityAccountName;
+	this.assetAccountName = assetAccountName;
+	this.id = id;
+	this.amount = amount;
+	this.expenseAccountId = expenseAccountId;
+	this.liabilityAccountId = liabilityAccountId;
+	this.assetAccountId = assetAccountId;
+	this.disabled = disabled;
+	this.description = description;
+	this.name = name;
+	this.fromDate=fromDate;
+	this.toDate=toDate;
+	this.year=year;
+	this.createDate=createDate;
 }
 
 
 
+
+
+
+
+public static BudgetData sensibleDefaultsForNewBudgetCreation() {
+	final String  expenseAccountName = null;
+	final String liabilityAccountName = null;
+	final String assetAccountName = null;
+	final Long id = null;
+	final BigDecimal amount = null;
+	final  Long expenseAccountId = null;
+	final Long liabilityAccountId = null;
+	final Long assetAccountId = null;
+	final Boolean  disabled = null;
+	final String description = null;
+	final String name = null; 
+	 final LocalDate fromDate=null;
+	final LocalDate toDate=null;
+	final Long year=null;
+	final LocalDate createDate=null;
+
+    return new BudgetData(liabilityAccountName,assetAccountName,id,amount,expenseAccountId,liabilityAccountId,assetAccountId,disabled,description,name,expenseAccountName,fromDate,toDate,year,createDate);
+}
+
+
+public String getExpenseAccountName() {
+	return expenseAccountName;
+}
+
+
+public String getLiabilityAccountName() {
+	return liabilityAccountName;
+}
+
+
+public String getAssetAccountName() {
+	return assetAccountName;
+}
 
 
 public Integer getRowIndex() {
@@ -98,38 +198,29 @@ public Integer getRowIndex() {
 }
 
 
-public void setRowIndex(Integer rowIndex) {
-	this.rowIndex = rowIndex;
-}
-
-
-public BigDecimal getMinValue() {
-	return minValue;
-}
-
-
-public Long getGlId() {
-	return glId;
-}
-
 public Long getId() {
 	return id;
 }
 
 
-
-public BigDecimal getMaxValue() {
-	return maxValue;
+public BigDecimal getAmount() {
+	return amount;
 }
 
 
-
-
-public String getAccountName() {
-	return accountName;
+public Long getExpenseAccountId() {
+	return expenseAccountId;
 }
 
 
+public Long getLiabilityAccountId() {
+	return liabilityAccountId;
+}
+
+
+public Long getAssetAccountId() {
+	return assetAccountId;
+}
 
 
 public Boolean getDisabled() {
@@ -137,17 +228,16 @@ public Boolean getDisabled() {
 }
 
 
-public static BudgetData sensibleDefaultsForNewBudgetCreation() {
-    final Long id = null;
-    final Long acccountId = null;
-    final BigDecimal minValue = null;
-    final BigDecimal maxValue = null;
-    final String accountName = null;
-    final Boolean disabled = null;
-     
-
-    return new BudgetData(id, minValue, acccountId, maxValue, accountName,disabled);
+public String getDescription() {
+	return description;
 }
+
+
+public String getName() {
+	return name;
+}
+
+
 	
    
     

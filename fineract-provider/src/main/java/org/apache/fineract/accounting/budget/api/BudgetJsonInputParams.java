@@ -25,7 +25,7 @@ import java.util.Set;
  * Enum of all parameters passed in while creating/updating a GL Budget
  ***/
 public enum BudgetJsonInputParams {
-	 DISABLED("disabled"),  ID("id"), ACCOUNT_ID("accountId"), MAX_AMOUNT("maxAmount"), MIN_AMOUNT("minAmount"),LOCALE("locale");
+	 DATE_FORMAT("dateFormat"),DISABLED("disabled"),YEAR("year"),FROM_DATE("fromDate"),CREATE_DATE("createDate"),TO_DATE("toDate"),  ID("id"), EXPENSE_ACCOUNT_ID("expenseAccountId"),LIABILITY_ACCOUNT_ID("liabilityAccountId"),NAME("name"),ASSET_ACCOUNT_ID("assetAccountId"),DESCRIPTION("description"), AMOUNT("amount"),LOCALE("locale");
 
     private final String value;
 

@@ -26,9 +26,9 @@ import java.util.Set;
  */
 public class SingleDebitOrCreditEntryCommand {
 
-    private final Long glAccountId;
-    private final BigDecimal amount;
-    private final String comments;
+    private  Long glAccountId;
+    private  BigDecimal amount;
+    private  String comments;
 
     private final Set<String> parametersPassedInRequest;
 
@@ -67,5 +67,12 @@ public class SingleDebitOrCreditEntryCommand {
     public Set<String> getParametersPassedInRequest() {
         return this.parametersPassedInRequest;
     }
+
+	public void setGlAccountId(Long glAccountId) {
+		this.glAccountId = glAccountId;
+	}
+    
+    
+    
 
 }

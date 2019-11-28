@@ -16,33 +16,16 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.accounting.budget.service;
+package org.apache.fineract.accounting.budget.exception;
 
-import java.util.Date;
-import java.util.List;
+import org.apache.fineract.infrastructure.core.exception.AbstractPlatformResourceNotFoundException;
 
-import org.apache.fineract.accounting.budget.data.BudgetData;
-import org.apache.fineract.accounting.glaccount.data.GLAccountData;
+/**
+ * A {@link RuntimeException} thrown when GL account resources are not found.
+ */
+public class AccountUsedException extends AbstractPlatformResourceNotFoundException {
 
-
-
-public interface BudgetReadPlatformService {
-
-    List<BudgetData> retrieveAll(Integer accountId, String searchParam);
-
-    BudgetData retrieveBudgetById(long budgetId);
-    BudgetData retrieveAccountById(long accountId);
-    BudgetData retrieveNewBudgetDetails();
-
-	BudgetData getAccountById(long accountId);
-
-	
-	BudgetData retrieveByAsetAccountId(long accountId, Long year);
-
-	BudgetData getExpenseAccountById(long accountId);
-    
-    
-  
-
-//    List<GLAccountDataForLookup> retrieveAccountsByTagId(final Long ruleId, final Integer transactionType);
+    public AccountUsedException(final Long id,Long year) {
+        super("error.msg.glaccount.id.invalid", "General Ledger account with identifier " + id + " is already used from for budgeting "+year, id);
+    }
 }

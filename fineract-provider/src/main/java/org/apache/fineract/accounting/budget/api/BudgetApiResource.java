@@ -77,7 +77,7 @@ import org.springframework.stereotype.Component;
 @Api(value = "Budget Account", description = "Budget accounts")
 public class BudgetApiResource {
 
-    private static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList("id", "maxValue", "minValue", "accountId","accountName"
+    private static final Set<String> RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList("id", "amount", "name", "expenseAccountId","assetAccountId","disabled","assetAccountName","expenseAccountName","liabilityAccountName","liabilityAccountId","description","fromDate","toDate"
            ));
 
     private final String resourceNameForPermission = "BUDGET";
