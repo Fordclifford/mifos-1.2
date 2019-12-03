@@ -158,7 +158,8 @@ public class Budget extends AbstractPersistableCustom<Long> {
 
 
 
-    private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
+
+	private void handlePropertyUpdate(final JsonCommand command, final Map<String, Object> actualChanges, final String paramName,
             final BigDecimal propertyToBeUpdated) {
         if (command.isChangeInBigDecimalParameterNamed(paramName, propertyToBeUpdated)) {
             final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(paramName);
@@ -193,8 +194,9 @@ public class Budget extends AbstractPersistableCustom<Long> {
             final Long newValue = command.longValueOfParameterNamed(paramName);
             actualChanges.put(paramName, newValue);
             // now update actual property
-            if (paramName.equals(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
-                // do nothing as this is a nested property
+            if (paramName.equals(BudgetJsonInputParams.YEAR.getValue())) {
+            	this.year=newValue;
+               
             }
         }
     }
@@ -206,7 +208,7 @@ public class Budget extends AbstractPersistableCustom<Long> {
             actualChanges.put(paramName, newValue);
             // now update actual property
             if (paramName.equals(BudgetJsonInputParams.DISABLED.getValue())) {
-                // do nothing as this is a nested property
+               this.disabled=newValue;
             }
         }
     }

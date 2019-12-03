@@ -31,6 +31,7 @@ import org.apache.fineract.accounting.budget.exception.BudgetInvalidAccountExcep
 import org.apache.fineract.accounting.budget.exception.BudgetInvalidAccountTypeException;
 import org.apache.fineract.accounting.budget.exception.BudgetNotExpenseAcccountException;
 import org.apache.fineract.accounting.budget.exception.BudgetNotFoundException;
+import org.apache.fineract.accounting.budget.exception.ParameterRequired;
 import org.apache.fineract.accounting.budget.serialization.BudgetCommandFromApiJsonDeserializer;
 import org.apache.fineract.accounting.common.AccountingConstants;
 import org.apache.fineract.accounting.glaccount.api.GLAccountJsonInputParams;
@@ -150,34 +151,74 @@ public class BudgetWritePlatformServiceJpaRepositoryImpl implements  BudgetWrite
 //							.booleanPrimitiveValueOfParameterNamed(GLAccountJsonInputParams.DISABLED
 //									.getValue())) {
 //				validateForAttachedProduct(glAccountId);
-//			}
-            final Long expenseAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue());
-            final Long assetAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue());
-            final Long liabilityeAcc = command.longValueOfParameterNamed(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue());
-           //   if (glAccountId.equals(parentId)) { throw new InvalidParentGLAccountHeadException(glAccountId, parentId); }
+      
+            if(command.hasParameter(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
+            	if(!command.hasParameter(BudgetJsonInputParams.YEAR.getValue())) {
+            		throw new ParameterRequired(BudgetJsonInputParams.ASSET_ACCOUNT_ID.name());
+            	}
+            }
+               
+            
+             final Long expenseAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue());
+            final Long assetAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue());
+            final Long liabilityAccountId = command.longValueOfParameterNamed(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue());
+            final Long year = command.longValueOfParameterNamed(BudgetJsonInputParams.YEAR.getValue());
+            
+            
+            //   if (glAccountId.equals(parentId)) { throw new InvalidParentGLAccountHeadException(glAccountId, parentId); }
             // is the glAccount valid
+            
             final Budget budgetAccount = this.budgetRepository.findOne(glAccountId);
             if (budgetAccount == null) { throw new BudgetNotFoundException(glAccountId); }
-
             final Map<String, Object> changesOnly = budgetAccount.update(command);
 
-            // is the new parent valid
-            if (changesOnly.containsKey(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
-                final GLAccount asset = validateParentGLAccount(assetAcc);
-               
-                budgetAccount.updateAssetAccount(asset);
-              
+            
+            
+            if(changesOnly.containsKey(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
+            	GLAccount assetAcc= validateTypeGLAccount(assetAccountId, GLAccountType.ASSET.getValue());
+            	
+            	BudgetData checkAsset =budgetRead.getByAsetAccountId(assetAccountId, year,glAccountId);
+            	
+          	         	  	
+        	  	if(	checkAsset!=null){
+        	  		throw new AccountUsedException(assetAccountId,year);
+        	  		
+        	  	}else {
+        	  		budgetAccount.setAssetAccountId(assetAcc);
+        	  	}
             }
-            if (changesOnly.containsKey(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue())) {
-               
-                final GLAccount expense = validateParentGLAccount(expenseAcc);
-                 budgetAccount.updateExpenseAccount(expense);
-              
+         
+            
+            if(changesOnly.containsKey(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue())) {
+            	
+            	GLAccount expAcc= validateTypeGLAccount(expenseAccountId, GLAccountType.EXPENSE.getValue());
+            	budgetAccount.setExpenseAccountId(expAcc);
             }
-            if (changesOnly.containsKey(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue())) {
-                final GLAccount liability = validateParentGLAccount(liabilityeAcc);
-                budgetAccount.updateLiabilityAccount(liability);
-            }
+            
+            if(changesOnly.containsKey(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue())) {
+            	
+            	GLAccount liabAcc = validateTypeGLAccount(liabilityAccountId, GLAccountType.LIABILITY.getValue());
+            	budgetAccount.setLiabilityAccountId(liabAcc);
+           }         
+           
+            
+           // is the new parent valid
+//            if (changesOnly.containsKey(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue())) {
+//                final GLAccount asset = validateParentGLAccount(assetAcc);
+//               
+//                budgetAccount.updateAssetAccount(asset);
+//              
+//            }
+//            if (changesOnly.containsKey(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue())) {
+//               
+//                final GLAccount expense = validateParentGLAccount(expenseAcc);
+//                 budgetAccount.updateExpenseAccount(expense);
+//              
+//            }
+//            if (changesOnly.containsKey(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue())) {
+//                final GLAccount liability = validateParentGLAccount(liabilityeAcc);
+//                budgetAccount.updateLiabilityAccount(liability);
+//            }
 
 //            if (changesOnly.containsKey(GLAccountJsonInputParams.TAGID.getValue())) {
 //                final Long tagIdLongValue = command.longValueOfParameterNamed(GLAccountJsonInputParams.TAGID.getValue());

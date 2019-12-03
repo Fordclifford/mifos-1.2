@@ -135,11 +135,11 @@ public class BudgetApiResource {
     @Produces({ MediaType.APPLICATION_JSON })
     @ApiOperation(value = "List General Ledger Accounts", notes = "ARGUMENTS\n" + "type Integer optional manualEntriesAllowed boolean optional usage Integer optional disabled boolean optional parentId Long optional tagId Long optional\n" + "Example Requests:\n" + "\n" + "glaccounts\n" + "\n" + "\n" + "glaccounts?type=1&manualEntriesAllowed=true&usage=1&disabled=false\n" + "\n" + "glaccounts?fetchRunningBalance=true")
     @ApiResponses({@ApiResponse(code = 200, message = "", response =BudgetApiResourceSwagger.GetGLAccountsResponse.class, responseContainer = "list")})
-    public String retrieveAllAccounts(@Context final UriInfo uriInfo,@QueryParam("accountId") Integer account,@QueryParam("searchPatram") String searchParam) {
+    public String retrieveAllAccounts(@Context final UriInfo uriInfo, @QueryParam("searchParam") @ApiParam(value = "searchParam") final String searchParam) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermission);
        // JournalEntryAssociationParametersData associationParametersData = new JournalEntryAssociationParametersData(false, runningBalance);
-        final List<BudgetData> budgetDatas = this.budgetReadPlatformService.retrieveAll(account, searchParam);
+        final List<BudgetData> budgetDatas = this.budgetReadPlatformService.retrieveAll(searchParam);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
         return this.apiJsonSerializerService.serialize(settings, budgetDatas, RESPONSE_DATA_PARAMETERS);

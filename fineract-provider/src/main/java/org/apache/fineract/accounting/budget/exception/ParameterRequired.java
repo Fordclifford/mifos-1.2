@@ -24,9 +24,10 @@ import org.apache.fineract.infrastructure.core.exception.AbstractPlatformDomainR
 /**
  * A {@link RuntimeException} thrown when GL account resources are not found.
  */
-public class AccountUsedException extends AbstractPlatformDomainRuleException {
+public class ParameterRequired extends AbstractPlatformDomainRuleException {
 
-    public AccountUsedException(final Long id,Long year) {
-        super("error.msg.glaccount.id.invalid", "General Ledger account with identifier " + id + " is already used from for budgeting "+year, id);
+    public ParameterRequired(String parameter) {
+        super("validation.msg.missing.year.parameter", "The parameter Source Account requires a 'year' parameter to be passed with it. ",parameter
+);
     }
 }

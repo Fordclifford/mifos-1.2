@@ -117,7 +117,7 @@ public class PaymentReadPlatformServiceImpl implements PaymentReadPlatformServic
 		 final PaymentMapper mapper = new PaymentMapper();
 		
        final String sql = "Select " + mapper.schema() + " WHERE lt.is_reversed='0' and p.receipt_number = ?";
-       System.out.println(sql);
+      // System.out.println(sql);
        return this.jdbcTemplate.query(sql, mapper, new Object[] { receiptNumber });
 
 	}

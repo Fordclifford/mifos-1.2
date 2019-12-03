@@ -28,7 +28,7 @@ import org.apache.fineract.accounting.glaccount.data.GLAccountData;
 
 public interface BudgetReadPlatformService {
 
-    List<BudgetData> retrieveAll(Integer accountId, String searchParam);
+    List<BudgetData> retrieveAll(String searchParam);
 
     BudgetData retrieveBudgetById(long budgetId);
     BudgetData retrieveAccountById(long accountId);
@@ -38,8 +38,11 @@ public interface BudgetReadPlatformService {
 
 	
 	BudgetData retrieveByAsetAccountId(long accountId, Long year);
+	
 
 	BudgetData getExpenseAccountById(long accountId);
+
+	BudgetData getByAsetAccountId(long accountId, Long year,Long budgetId);
     
     
   

@@ -113,32 +113,31 @@ public class BudgetCommand {
 	public void validateForUpdate() {
         final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
 
-        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("GLAccount");
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.AMOUNT.getValue()).value(this.amount).notBlank().notLessThanMin(0);
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("Budget");
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.AMOUNT.getValue()).value(this.amount).ignoreIfNull().notLessThanMin(0);
 
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.NAME.getValue()).value(this.name).notBlank().notLessThanMin(0)
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.NAME.getValue()).value(this.name).ignoreIfNull().notLessThanMin(0)
                 .notExceedingLengthOf(45);
-        baseDataValidator.reset().parameter("fromDate").value(this.fromDate).notBlank();
-        baseDataValidator.reset().parameter("disabled").value(this.disabled).notBlank();
+        baseDataValidator.reset().parameter("fromDate").value(this.fromDate).ignoreIfNull();
+        baseDataValidator.reset().parameter("disabled").value(this.disabled).ignoreIfNull();
 
-        baseDataValidator.reset().parameter("toDate").value(this.toDate).notBlank();
-        baseDataValidator.reset().parameter("createdate").value(this.createdate).notBlank();
+        baseDataValidator.reset().parameter("toDate").value(this.toDate).ignoreIfNull();
+        baseDataValidator.reset().parameter("createdate").value(this.createdate).ignoreIfNull();
         
         baseDataValidator.reset().parameter("description").value(this.description).ignoreIfNull().notExceedingLengthOf(500);
 
         
       //  baseDataValidator.reset().parameter(BudgetJsonInputParams.DISABLED.getValue()).value(this.disabled).notBlank();
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue()).value(this.liabilityAccountId).notBlank()
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.LIABILITY_ACCOUNT_ID.getValue()).value(this.liabilityAccountId).ignoreIfNull()
                 .integerGreaterThanZero();
         
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.YEAR.getValue()).value(this.year).notBlank()
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.YEAR.getValue()).value(this.year).ignoreIfNull()
         .integerGreaterThanZero();
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue()).value(this.expenseAccountId).notBlank()
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.EXPENSE_ACCOUNT_ID.getValue()).value(this.expenseAccountId).ignoreIfNull()
         .integerGreaterThanZero();
-        baseDataValidator.reset().parameter(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue()).value(this.assetAccountId).notBlank()
+        baseDataValidator.reset().parameter(BudgetJsonInputParams.ASSET_ACCOUNT_ID.getValue()).value(this.assetAccountId).ignoreIfNull()
         .integerGreaterThanZero();
-
-
+        baseDataValidator.reset().anyOfNotNull(this.amount, this.fromDate, this.toDate, this.year, this.description, this.disabled,this.expenseAccountId,this.assetAccountId,this.liabilityAccountId);
 
         if (!dataValidationErrors.isEmpty()) { throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist",
                 "Validation errors exist.", dataValidationErrors); }
