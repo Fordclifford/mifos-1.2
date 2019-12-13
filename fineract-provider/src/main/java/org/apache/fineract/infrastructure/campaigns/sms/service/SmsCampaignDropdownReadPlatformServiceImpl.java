@@ -74,14 +74,22 @@ public class SmsCampaignDropdownReadPlatformServiceImpl implements SmsCampaignDr
         try {
             Map<String, Object> hostConfig = this.smsConfigUtils.getMessageGateWayRequestURI("smsbridges", null);
             URI uri = (URI) hostConfig.get("uri");
+            System.out.println("the link"+uri);
             hostName = uri.getHost() ;
             HttpEntity<?> entity = (HttpEntity<?>) hostConfig.get("entity");
             ResponseEntity<Collection<SmsProviderData>> responseOne = restTemplate.exchange(uri, HttpMethod.GET, entity,
                     new ParameterizedTypeReference<Collection<SmsProviderData>>() {});
+           
             smsProviderOptions = responseOne.getBody();
             if (!responseOne.getStatusCode().equals(HttpStatus.OK)) {
+            	System.out.println("error"+smsProviderOptions.toString());
             }
-        } catch (Exception e) {
+            System.out.println("error"+responseOne.getBody().toString());
+            System.out.println("message");
+            responseOne.getStatusCode();
+                   } catch (Exception e) {
+                	   System.out.println( e.getMessage());
+                	  
         }
         return smsProviderOptions;
     }

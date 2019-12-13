@@ -31,13 +31,18 @@ public class SmsProviderData {
     private String providerName;
 
     private String providerDescription;
+    
+    private String tenantKeyword;
+    
+
 
     public SmsProviderData(final Long id, final String providerAppKey, final String providerName, final String providerDescription, final String tenantId, 
-            final String phoneNo) {
+            final String phoneNo, final String tenantKeyword) {
         this.id = id;
         this.providerAppKey = providerAppKey;
         this.providerName = providerName;
         this.providerDescription = providerDescription;
+        this.tenantKeyword = tenantKeyword;
         this.tenantId = tenantId;
         this.phoneNo = phoneNo;
     }
@@ -69,4 +74,9 @@ public class SmsProviderData {
     public String getPhoneNo() {
         return this.phoneNo;
     }
+
+	public String getTenantKeyword() {
+		return tenantKeyword;
+	}
+    
 }

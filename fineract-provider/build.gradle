@@ -123,6 +123,7 @@ rat {
     '**/native/**',
     '**/wrapper/**',
 	'**/build/**',
+	'**/.nb-gradle/**',
 	
 	//Api Docs 
 	'**/api-docs/*.*',

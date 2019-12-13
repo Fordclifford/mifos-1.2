@@ -326,24 +326,41 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
     
             BudgetData assetAccount=this.budgetReadService.getAccountById(creditEntryCommand.getGlAccountId());
             if(assetAccount!=null) {
-            	 BigDecimal budgetAmount=assetAccount.getAmount();
+            	// BigDecimal budgetAmount=assetAccount.getAmount();
+            	 
+            	 
+            	 Double budgetAmount = new Double(assetAccount.getAmount().toString());
             	  System.out.println("budget Amount"+budgetAmount);
                 
                 //amount must be less than or equal to budget
-            	 BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
-               System.out.println("all credita"+allCredits);
-               BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
+            	// BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
+            	 Double allCredits = new Double(this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount()).toString());
+            	 
+            	 System.out.println("all credita"+allCredits);
+              // BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
+              
+
+          	 Double dbDebits = new Double(this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L).toString());
+          	
                System.out.println("db debits"+dbDebits);
+//               
+//               Double RunningBalance=dbDebits.(allCredits);
                
-               BigDecimal RunningBalance=dbDebits.subtract(allCredits);
-               System.out.println("Balance"+RunningBalance);
+            //   System.out.println("Balance"+RunningBalance);
+               
+               BigDecimal dDebits=new BigDecimal(dbDebits.toString());
+               BigDecimal dCredits=new BigDecimal(allCredits.toString());
+               
+               Double RunningBalance=new Double(dDebits.subtract(dCredits).toString());
+               
+               System.out.println("running bal"+RunningBalance);
                 
                 
                 if(!budgetReadService.getAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {   
                 	
-                   if(budgetAmount.compareTo(RunningBalance)==-1) {
+                   if(budgetAmount.compareTo(RunningBalance)==1) {
                 	   
-                	   System.out.println("Budget violated"+RunningBalance);
+                	   System.out.println("Budget violated");
                 	   
                 	   throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.getAccountById(creditEntryCommand.getGlAccountId()).getExpenseAccountName(), null);    }            
                 else {
@@ -381,21 +398,6 @@ public class JournalEntryWritePlatformServiceJpaRepositoryImpl implements Journa
             }
             }
             
-//            
-//            //amount must be less than or equal to budget
-//         BigDecimal allCredits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),1L).add(creditEntryCommand.getAmount());
-//            System.out.println("all credita"+allCredits);
-//            BigDecimal dbDebits=this.jEntryReadPlatform.accountTotal(creditEntryCommand.getGlAccountId(),2L);
-//            System.out.println("db debits"+dbDebits);
-//            
-//            BigDecimal RunningBalance=dbDebits.subtract(allCredits);
-//            System.out.println("Balance"+RunningBalance);
-//            
-//            BigDecimal budgetAmount=this.budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getMaxValue();
-//        if(!budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getDisabled()) {    
-//           if(budgetAmount.compareTo(RunningBalance)==-1) {throw new JournalEntryInvalidException(GL_JOURNAL_ENTRY_INVALID_REASON.BUDGET_VIOLATION,null,budgetReadService.retrieveAccountById(creditEntryCommand.getGlAccountId()).getAccountName(), null);    }            
-//        }
-        
         }
         for (final SingleDebitOrCreditEntryCommand debitEntryCommand : debits) {
             if (debitEntryCommand.getAmount() == null || debitEntryCommand.getGlAccountId() == null) { throw new JournalEntryInvalidException(
